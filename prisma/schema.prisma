@@ -1,0 +1,539 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth (Better Auth) ───────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("agent") // owner | manager | agent
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  employee      Employee?
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ─── Organization ─────────────────────────────────────────────────
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  tagline      String?
+  phone        String?
+  email        String?
+  website      String?
+  whatsapp     String?
+  timezone     String   @default("America/Phoenix")
+  businessHours Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  departments   Department[]
+  employees     Employee[]
+  customers     Customer[]
+  services      Service[]
+  serviceAreas  ServiceArea[]
+  appointments  Appointment[]
+  leads         Lead[]
+  tickets       Ticket[]
+  conversations Conversation[]
+  knowledge     KnowledgeArticle[]
+  routingRules  RoutingRule[]
+  urgencyRules  UrgencyRule[]
+  integrations  Integration[]
+  holidays      Holiday[]
+  activityEvents ActivityEvent[]
+  followUps     FollowUp[]
+  demoRuns      DemoRun[]
+}
+
+// ─── Staff ────────────────────────────────────────────────────────
+
+model Department {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  description    String?
+  employees      Employee[]
+  tickets        Ticket[]
+  routingRules   RoutingRule[]
+
+  @@unique([organizationId, slug])
+}
+
+model Employee {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id])
+  userId         String?  @unique
+  user           User?    @relation(fields: [userId], references: [id])
+  name           String
+  email          String
+  phone          String?
+  role           String
+  isOnCall       Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  workingHours   Json?
+  appointments   Appointment[]
+  tickets        Ticket[]
+  availability   AvailabilityRule[]
+
+  @@index([organizationId])
+}
+
+// ─── Customers ────────────────────────────────────────────────────
+
+model Customer {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  addressLine1   String?
+  addressLine2   String?
+  city           String?
+  state          String?
+  postalCode     String?
+  customerType   String   @default("residential") // residential | commercial | lead
+  preferences    Json?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  identities    CustomerIdentity[]
+  appointments  Appointment[]
+  leads         Lead[]
+  tickets       Ticket[]
+  conversations Conversation[]
+  timeline      TimelineEvent[]
+  followUps     FollowUp[]
+  escalations   Escalation[]
+
+  @@index([organizationId])
+  @@index([phone])
+  @@index([email])
+}
+
+model CustomerIdentity {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  channel    String   // phone | email | whatsapp | sms | facebook | instagram | chat
+  value      String
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([channel, value])
+  @@index([customerId])
+}
+
+// ─── Services & Areas ─────────────────────────────────────────────
+
+model Service {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  description    String?
+  category       String
+  durationMin    Int      @default(90)
+  bufferMin      Int      @default(30)
+  travelBufferMin Int     @default(20)
+  basePriceCents Int?
+  isEmergencyEligible Boolean @default(false)
+  isActive       Boolean  @default(true)
+  appointments   Appointment[]
+  leads          Lead[]
+
+  @@unique([organizationId, slug])
+}
+
+model ServiceArea {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  postalCodes    String[]
+  isActive       Boolean  @default(true)
+}
+
+model Holiday {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  date           DateTime @db.Date
+}
+
+model AvailabilityRule {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  dayOfWeek  Int      // 0=Sun .. 6=Sat
+  startTime  String   // HH:mm
+  endTime    String
+  isActive   Boolean  @default(true)
+}
+
+// ─── Appointments ─────────────────────────────────────────────────
+
+model Appointment {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id])
+  serviceId      String
+  service        Service  @relation(fields: [serviceId], references: [id])
+  employeeId     String?
+  employee       Employee? @relation(fields: [employeeId], references: [id])
+  status         String   @default("scheduled") // scheduled | confirmed | in_progress | completed | cancelled | no_show | rescheduled
+  startsAt       DateTime
+  endsAt         DateTime
+  addressLine1   String?
+  city           String?
+  postalCode     String?
+  urgency        String   @default("NORMAL")
+  notes          String?
+  confirmationSent Boolean @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId, startsAt])
+  @@index([customerId])
+  @@index([employeeId, startsAt])
+}
+
+// ─── Leads ────────────────────────────────────────────────────────
+
+model Lead {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  serviceId      String?
+  service        Service? @relation(fields: [serviceId], references: [id])
+  source         String
+  stage          String   @default("new") // new | contacted | qualified | quoted | won | lost
+  urgency        String   @default("NORMAL")
+  summary        String?
+  estimatedValueCents Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId, stage])
+}
+
+// ─── Tickets ──────────────────────────────────────────────────────
+
+model Ticket {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ticketNumber   String
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id])
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id])
+  assignedToId   String?
+  assignedTo     Employee? @relation(fields: [assignedToId], references: [id])
+  category       String
+  priority       String   @default("NORMAL") // CRITICAL | HIGH | NORMAL | LOW
+  status         String   @default("New") // New | Assigned | In Progress | Waiting for Customer | Escalated | Resolved | Closed
+  subject        String
+  description    String
+  conversationId String?
+  slaTargetAt    DateTime?
+  resolution     String?
+  internalNotes  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  escalations    Escalation[]
+
+  @@unique([organizationId, ticketNumber])
+  @@index([organizationId, status])
+  @@index([customerId])
+}
+
+// ─── Conversations ────────────────────────────────────────────────
+
+model Conversation {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  channel        String   // phone | whatsapp | email | sms | facebook | instagram | chat
+  status         String   @default("open") // open | waiting | resolved | escalated
+  subject        String?
+  summary        String?
+  urgency        String   @default("NORMAL")
+  intent         String?
+  startedAt      DateTime @default(now())
+  endedAt        DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  messages    Message[]
+  callSession CallSession?
+  escalations Escalation[]
+
+  @@index([organizationId, channel])
+  @@index([customerId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      String   // inbound | outbound | system
+  senderType     String   // customer | system | employee
+  body           String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model CallSession {
+  id             String   @id @default(cuid())
+  conversationId String   @unique
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  fromNumber     String?
+  toNumber       String?
+  direction      String   @default("inbound")
+  outcome        String?  // answered | missed | transferred | voicemail
+  durationSec    Int?
+  recordingUrl   String?
+  isSimulated    Boolean  @default(true)
+  startedAt      DateTime @default(now())
+  endedAt        DateTime?
+}
+
+model TimelineEvent {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type       String
+  title      String
+  detail     String?
+  channel    String?
+  refType    String?
+  refId      String?
+  metadata   Json?
+  occurredAt DateTime @default(now())
+
+  @@index([customerId, occurredAt])
+}
+
+// ─── Knowledge ────────────────────────────────────────────────────
+
+model KnowledgeArticle {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category       String
+  title          String
+  slug           String
+  content        String
+  keywords       String[]
+  isApproved     Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, slug])
+}
+
+// ─── Rules ────────────────────────────────────────────────────────
+
+model RoutingRule {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  priority       Int      @default(100)
+  conditions     Json
+  departmentId   String
+  department     Department @relation(fields: [departmentId], references: [id])
+  isActive       Boolean  @default(true)
+}
+
+model UrgencyRule {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  level          String   // CRITICAL | HIGH | NORMAL | LOW
+  keywords       String[]
+  conditions     Json?
+  requiresEscalation Boolean @default(false)
+  safetyScript   String?
+  priority       Int      @default(100)
+  isActive       Boolean  @default(true)
+}
+
+// ─── Escalations & Follow-ups ─────────────────────────────────────
+
+model Escalation {
+  id             String   @id @default(cuid())
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  ticketId       String?
+  ticket         Ticket?  @relation(fields: [ticketId], references: [id])
+  reason         String
+  urgency        String
+  summary        String
+  historySnippet String?
+  recommendedAction String?
+  method         String   // dashboard | sms | email | call_transfer | notification
+  status         String   @default("open") // open | acknowledged | resolved
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model FollowUp {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id])
+  type           String   // abandoned_booking | quote_silence | enquiry_dropout | reminder | post_service | review_request
+  channel        String
+  status         String   @default("pending") // pending | sent | cancelled | completed
+  scheduledFor   DateTime
+  sentAt         DateTime?
+  payload        Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, status, scheduledFor])
+}
+
+// ─── Integrations & Audit ─────────────────────────────────────────
+
+model Integration {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  key            String
+  name           String
+  status         String   // SIMULATED | CONNECTED | READY_FOR_INTEGRATION
+  description    String?
+  config         Json?
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, key])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  detail    Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model ActivityEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           String
+  title          String
+  detail         String?
+  severity       String   @default("info")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt])
+}
+
+// ─── Demo ─────────────────────────────────────────────────────────
+
+model DemoScenario {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String
+  beats       Json
+  isActive    Boolean  @default(true)
+}
+
+model DemoRun {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  scenarioKey    String?
+  status         String   @default("idle")
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
+  metadata       Json?
+}
