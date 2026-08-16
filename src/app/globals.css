@@ -312,7 +312,284 @@ h3 {
   background: var(--marketing-bg);
 }
 
-.marketing-shell body,
-html:has(.marketing-shell) body {
-  background: var(--marketing-bg);
+@property --ox-spread {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 2.45;
+}
+
+.ox-site-header {
+  border-bottom: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(0px);
+  transition:
+    background 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    backdrop-filter 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ox-site-header-inner {
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+  transition: padding 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ox-site-header[data-scrolled="true"] {
+  border-bottom-color: rgba(10, 10, 10, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 30px rgba(10, 10, 10, 0.06);
+  backdrop-filter: blur(18px);
+}
+
+.ox-site-header[data-scrolled="true"] .ox-site-header-inner {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+.ox-scroll-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 1.5px;
+  width: calc(var(--ox-scroll, 0) * 100%);
+  background: #0a0a0a;
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.ox-nav-link {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  overflow: hidden;
+  padding: 0.42rem 0.85rem;
+  color: #5c5c5c;
+  transition: color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ox-nav-link span {
+  position: relative;
+  z-index: 1;
+}
+
+.ox-nav-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #0a0a0a;
+  transform: translateY(110%);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ox-nav-link:hover,
+.ox-nav-link:focus-visible {
+  color: #ffffff;
+}
+
+.ox-nav-link:hover::before,
+.ox-nav-link:focus-visible::before {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ox-site-header,
+  .ox-site-header-inner,
+  .ox-nav-link,
+  .ox-nav-link::before {
+    transition: none;
+  }
+}
+
+.ox-brand-name {
+  font-family: var(--font-syne), var(--font-plus-jakarta), sans-serif;
+  font-weight: 700;
+  color: #0a0a0a;
+}
+
+.ox-brand-mark {
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.ox-brand-cards {
+  --ox-spread: 2.45;
+  transition: --ox-spread 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ox-brand-card {
+  transform: translate(calc(var(--i) * var(--ox-spread) * -1px), calc(var(--i) * var(--ox-spread) * -0.62px));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ox-brand-link:hover .ox-brand-cards,
+.ox-brand-link:focus-visible .ox-brand-cards {
+  --ox-spread: 5.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ox-brand-cards,
+  .ox-brand-card {
+    transition: none;
+  }
+
+  .ox-brand-link:hover .ox-brand-cards,
+  .ox-brand-link:focus-visible .ox-brand-cards {
+    --ox-spread: 2.45;
+  }
+}
+
+.ox-service-grid {
+  overflow: visible;
+  padding: 1.75rem 0.6rem 2.5rem;
+  perspective: 1600px;
+  perspective-origin: 50% 42%;
+}
+
+.ox-service-card {
+  border-radius: 30px;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  box-shadow: 0 10px 28px rgba(10, 10, 10, 0.08);
+  transition:
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 768px) {
+  .ox-service-grid {
+    gap: 1.85rem;
+  }
+
+  .ox-service-card:nth-child(1) {
+    transform: rotateY(22deg) rotateZ(-4deg) translateY(10px);
+  }
+
+  .ox-service-card:nth-child(2) {
+    transform: rotateX(8deg) rotateZ(3deg);
+  }
+
+  .ox-service-card:nth-child(3) {
+    transform: rotateY(-22deg) rotateZ(4deg) translateY(10px);
+  }
+}
+
+.ox-service-scrim {
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.18) 0%, rgba(10, 10, 10, 0.28) 42%, rgba(10, 10, 10, 0.82) 100%);
+  transition: background 500ms ease;
+}
+
+.ox-service-video {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms ease;
+}
+
+.ox-service-rule {
+  width: 2rem;
+  transition: width 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ox-service-copy {
+  max-height: 6rem;
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ox-service-copy {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(14px);
+    overflow: hidden;
+    transition:
+      opacity 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      max-height 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ox-service-card:hover,
+  .ox-service-card:focus-visible {
+    z-index: 20;
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1.08) translateY(-16px);
+    box-shadow: 0 28px 64px rgba(10, 10, 10, 0.22);
+  }
+
+  .ox-service-grid:hover .ox-service-card:nth-child(1):not(:hover):not(:focus-visible) {
+    transform: rotateY(22deg) rotateZ(-4deg) scale(0.94);
+    opacity: 0.72;
+  }
+
+  .ox-service-grid:hover .ox-service-card:nth-child(2):not(:hover):not(:focus-visible) {
+    transform: rotateX(8deg) rotateZ(3deg) scale(0.94);
+    opacity: 0.72;
+  }
+
+  .ox-service-grid:hover .ox-service-card:nth-child(3):not(:hover):not(:focus-visible) {
+    transform: rotateY(-22deg) rotateZ(4deg) scale(0.94);
+    opacity: 0.72;
+  }
+
+  .ox-service-card:hover .ox-service-copy,
+  .ox-service-card:focus-visible .ox-service-copy,
+  .ox-service-card:focus-within .ox-service-copy {
+    max-height: 6rem;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .ox-service-card:hover .ox-service-video,
+  .ox-service-card:focus-visible .ox-service-video,
+  .ox-service-card:focus-within .ox-service-video {
+    opacity: 1;
+  }
+
+  .ox-service-card:hover .ox-service-rule,
+  .ox-service-card:focus-visible .ox-service-rule,
+  .ox-service-card:focus-within .ox-service-rule {
+    width: 4.5rem;
+  }
+
+  .ox-service-card:hover .ox-service-scrim,
+  .ox-service-card:focus-visible .ox-service-scrim,
+  .ox-service-card:focus-within .ox-service-scrim {
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.28) 0%, rgba(10, 10, 10, 0.45) 38%, rgba(10, 10, 10, 0.9) 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ox-service-card,
+  .ox-service-video,
+  .ox-service-rule,
+  .ox-service-copy,
+  .ox-service-scrim {
+    transition: none;
+  }
+
+  .ox-service-card,
+  .ox-service-card:nth-child(1),
+  .ox-service-card:nth-child(2),
+  .ox-service-card:nth-child(3),
+  .ox-service-card:hover,
+  .ox-service-card:focus-visible,
+  .ox-service-grid:hover .ox-service-card:nth-child(1):not(:hover):not(:focus-visible),
+  .ox-service-grid:hover .ox-service-card:nth-child(2):not(:hover):not(:focus-visible),
+  .ox-service-grid:hover .ox-service-card:nth-child(3):not(:hover):not(:focus-visible) {
+    transform: none;
+    opacity: 1;
+    box-shadow: none;
+  }
+
+  .ox-service-video {
+    opacity: 0;
+  }
+
+  .ox-service-copy {
+    max-height: 6rem;
+    opacity: 1;
+    transform: none;
+  }
 }

@@ -27,7 +27,7 @@ export default function ServicesPage() {
         whole stack.
       </p>
 
-      <section className="mt-16 border-t border-black pt-10">
+      <section id="bos" className="mt-16 scroll-mt-24 border-t border-black pt-10">
         <h2 className="text-2xl font-semibold">Business Operating Systems</h2>
         <p className="mt-3 max-w-2xl text-sm text-[#5c5c5c]">
           Replace fragmented tools with a connected operating layer — starting with the digital front desk and
@@ -42,7 +42,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <section className="mt-16 border-t border-black pt-10">
+      <section id="apps" className="mt-16 scroll-mt-24 border-t border-black pt-10">
         <h2 className="text-2xl font-semibold">App Development</h2>
         <p className="mt-3 max-w-2xl text-sm text-[#5c5c5c]">
           Custom web and mobile applications designed around real operations — from guest experience to internal
@@ -66,7 +66,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <section className="mt-16 border-t border-black pt-10">
+      <section id="web" className="mt-16 scroll-mt-24 border-t border-black pt-10">
         <h2 className="text-2xl font-semibold">Web Development</h2>
         <p className="mt-3 max-w-2xl text-sm text-[#5c5c5c]">
           Premium marketing sites, landing pages, booking flows, dashboards, and integrations — designed to convert

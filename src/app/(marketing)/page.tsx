@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ServiceCards } from "@/components/marketing/service-cards";
 
 export default function HomePage() {
   return (
@@ -41,33 +42,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <h2 className="text-2xl font-semibold tracking-tight">Three ways we work with you</h2>
-        <p className="mt-2 max-w-2xl text-sm text-[#5c5c5c]">
-          Pick a lane — or combine them into a complete operating system for your business.
-        </p>
-        <div className="mt-10 grid gap-8 md:grid-cols-3">
-          {[
-            {
-              title: "Business Operating Systems",
-              body: "Interconnected modules that run the front desk, pipeline, ops, and follow-ups as one system.",
-            },
-            {
-              title: "App Development",
-              body: "Custom web and mobile products shaped around how your team and customers actually operate.",
-            },
-            {
-              title: "Web Development",
-              body: "Premium sites, landing pages, booking flows, dashboards, and integrations that convert.",
-            },
-          ].map((item) => (
-            <div key={item.title} className="border-t border-black pt-5">
-              <h3 className="text-lg font-semibold">{item.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-[#5c5c5c]">{item.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <ServiceCards />
 
       <section className="border-y border-black bg-[#fafafa]">
         <div className="mx-auto max-w-6xl px-6 py-16">

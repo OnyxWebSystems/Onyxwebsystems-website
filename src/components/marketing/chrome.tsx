@@ -1,39 +1,7 @@
 import Link from "next/link";
 import { OnyxLogo } from "@/components/brand/onyx-logo";
 
-const nav = [
-  { href: "/services", label: "Services" },
-  { href: "/about", label: "About" },
-  { href: "/book", label: "Book" },
-];
-
-export function MarketingHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-black/10 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" aria-label="onyxwebsystems home">
-          <OnyxLogo size={48} />
-        </Link>
-        <nav className="hidden items-center gap-8 text-sm md:flex">
-          {nav.map((item) => (
-            <Link key={item.href} href={item.href} className="text-[#5c5c5c] transition-colors hover:text-black">
-              {item.label}
-            </Link>
-          ))}
-          <Link
-            href="/book"
-            className="ox-btn-solid px-4 py-2 text-sm font-medium"
-          >
-            Book a Consultation
-          </Link>
-        </nav>
-        <Link href="/book" className="border border-black px-3 py-1.5 text-xs font-medium md:hidden">
-          Book
-        </Link>
-      </div>
-    </header>
-  );
-}
+export { MarketingHeader } from "@/components/marketing/site-header";
 
 export function MarketingFooter() {
   return (
