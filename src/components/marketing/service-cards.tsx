@@ -61,7 +61,7 @@ function ServiceCard({ service }: { service: (typeof SERVICES)[number] }) {
   return (
     <Link
       href={service.href}
-      className="ox-service-card group relative isolate block h-[26rem] overflow-hidden border border-black md:h-[32rem]"
+      className="ox-service-card group relative isolate block h-[26rem] overflow-hidden border border-white md:h-[32rem]"
       aria-label={`${service.title}. ${service.body}`}
       onPointerEnter={playVideo}
       onPointerLeave={stopVideo}
@@ -103,15 +103,32 @@ function ServiceCard({ service }: { service: (typeof SERVICES)[number] }) {
 
 export function ServiceCards() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-20">
-      <h2 className="text-2xl font-semibold tracking-tight">Three ways we work with you</h2>
-      <p className="mt-2 max-w-2xl text-sm text-[#5c5c5c]">
-        Pick a lane — or combine them into a complete operating system for your business.
-      </p>
-      <div className="ox-service-grid mt-10 grid gap-5 md:grid-cols-3">
-        {SERVICES.map((service) => (
-          <ServiceCard key={service.id} service={service} />
-        ))}
+    <section id="ox-services-band" className="ox-services-band relative z-10">
+      <button
+        type="button"
+        className="ox-services-cue"
+        aria-label="See how we work"
+        onClick={() => document.getElementById("ox-services-grid")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 6.5 8 11.5 13 6.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="square" />
+        </svg>
+      </button>
+      <div className="relative mx-auto max-w-6xl px-6 pb-20">
+        <header className="ox-services-intro">
+          <h2 className="ox-services-display">
+            Three ways
+            <span>we work with you</span>
+          </h2>
+          <p className="ox-services-kicker">
+            Pick a lane — or combine them into a complete operating system for your business.
+          </p>
+        </header>
+        <div id="ox-services-grid" className="ox-service-grid mt-12 grid gap-5 md:grid-cols-3 md:mt-16">
+          {SERVICES.map((service) => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
       </div>
     </section>
   );

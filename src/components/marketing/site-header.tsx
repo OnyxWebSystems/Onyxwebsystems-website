@@ -67,8 +67,11 @@ export function MarketingHeader() {
             </Link>
           ))}
         </nav>
-        <Link href="/book" className="ox-btn-solid relative z-10 hidden px-4 py-2 text-sm font-medium md:inline-block">
-          Book a Consultation
+        <Link href="/book" className="ox-btn-nav relative z-10 hidden px-4 py-2 text-sm font-medium md:inline-flex">
+          <span>Book a Consultation</span>
+          <span className="ox-btn-nav-arrow" aria-hidden="true">
+            →
+          </span>
         </Link>
         <Link href="/book" className="relative z-10 border border-black px-3 py-1.5 text-xs font-medium md:hidden">
           Book
