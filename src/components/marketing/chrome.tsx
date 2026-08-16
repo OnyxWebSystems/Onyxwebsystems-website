@@ -51,7 +51,6 @@ export function MarketingFooter() {
           <Link href="/book">Book</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
-          <Link href="/login">Dashboard</Link>
         </div>
       </div>
       <div className="border-t border-black/10 px-6 py-4 text-center text-xs text-[#5c5c5c]">
