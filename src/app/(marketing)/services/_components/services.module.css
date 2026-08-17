@@ -1,12 +1,56 @@
 .arrow {
   display: inline-block;
   margin-left: 0.4em;
+  color: inherit;
   transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #0a0a0a;
+  transition:
+    background-color 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cta span {
+  color: inherit;
+}
+
+.ctaGhost {
+  background: transparent;
+  color: #0a0a0a;
+}
+
+.ctaGhost:hover,
+.ctaGhost:focus-visible {
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+.ctaSolid {
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+.ctaSolid:hover,
+.ctaSolid:focus-visible {
+  background: #1a1a1a;
+  color: #ffffff;
 }
 
 .cta:hover .arrow,
 .cta:focus-visible .arrow {
   transform: translateX(4px);
+}
+
+.cta:disabled {
+  opacity: 0.5;
 }
 
 .editorial {
@@ -43,6 +87,9 @@
 .node:hover,
 .nodeActive {
   transform: translate(-50%, calc(-50% - 3px));
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+  color: #ffffff;
 }
 
 .spoke {
@@ -117,12 +164,15 @@
 
 .tile:hover {
   border-color: #0a0a0a;
+  background: #0a0a0a;
+  color: #ffffff;
 }
 
-.tileOn {
+.tileOn,
+.tileOn:hover {
   background: #0a0a0a;
   border-color: #0a0a0a;
-  color: #fff;
+  color: #ffffff;
 }
 
 .progressRule {

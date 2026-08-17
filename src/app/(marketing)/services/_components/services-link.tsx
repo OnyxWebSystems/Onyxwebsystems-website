@@ -5,11 +5,6 @@ import styles from "./services.module.css";
 
 type Variant = "solid" | "ghost";
 
-const variantClass: Record<Variant, string> = {
-  solid: "ox-btn-solid border border-black",
-  ghost: "border border-black bg-transparent transition-colors hover:bg-[#0a0a0a] hover:text-white",
-};
-
 export function ServicesLink({
   href,
   children,
@@ -22,7 +17,10 @@ export function ServicesLink({
   className?: string;
 }) {
   return (
-    <Link href={href} className={cn(styles.cta, "inline-flex items-center px-6 py-3 text-sm font-medium", variantClass[variant], className)}>
+    <Link
+      href={href}
+      className={cn(styles.cta, variant === "solid" ? styles.ctaSolid : styles.ctaGhost, className)}
+    >
       <span>{children}</span>
       <span className={styles.arrow} aria-hidden>
         →
@@ -40,7 +38,7 @@ export function ServicesButton({
   return (
     <button
       type={props.type ?? "button"}
-      className={cn(styles.cta, "inline-flex items-center px-6 py-3 text-sm font-medium disabled:opacity-50", variantClass[variant], className)}
+      className={cn(styles.cta, variant === "solid" ? styles.ctaSolid : styles.ctaGhost, className)}
       {...props}
     >
       <span>{children}</span>
