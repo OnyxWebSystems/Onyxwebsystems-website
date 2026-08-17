@@ -108,14 +108,16 @@ export function ServiceCards() {
         type="button"
         className="ox-services-cue"
         aria-label="See how we work"
-        onClick={() => document.getElementById("ox-services-grid")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        onClick={() =>
+          document.getElementById("ox-services-intro")?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M3 6.5 8 11.5 13 6.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="square" />
         </svg>
       </button>
-      <div className="relative mx-auto max-w-6xl px-6 pb-20">
-        <header className="ox-services-intro">
+      <div className="relative mx-auto max-w-6xl overflow-x-clip px-6 pb-20">
+        <header id="ox-services-intro" className="ox-services-intro">
           <h2 className="ox-services-display">
             <span className="ox-services-display-light">Three ways</span>
             <span className="ox-services-display-dark">we work with you</span>
