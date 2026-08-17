@@ -1,0 +1,161 @@
+.arrow {
+  display: inline-block;
+  margin-left: 0.4em;
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cta:hover .arrow,
+.cta:focus-visible .arrow {
+  transform: translateX(4px);
+}
+
+.editorial {
+  transition: background-color 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.editorial:hover {
+  background-color: #fafafa;
+}
+
+.hidden {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transition:
+    border-color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.node:hover,
+.nodeActive {
+  transform: translate(-50%, calc(-50% - 3px));
+}
+
+.spoke {
+  stroke: #0a0a0a;
+  stroke-width: 0.6;
+  stroke-opacity: 0.22;
+  transition: stroke-opacity 400ms ease, stroke-width 400ms ease;
+}
+
+.spokeActive {
+  stroke-opacity: 1;
+  stroke-width: 0.9;
+}
+
+.detail {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition:
+    opacity 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.detailOpen {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.flowStep {
+  opacity: 0.28;
+  transform: translateY(8px);
+  transition:
+    opacity 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flowStepOn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.flowRule {
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flowRuleOn {
+  transform: scaleY(1);
+}
+
+.flowRuleH {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flowRuleHOn {
+  transform: scaleX(1);
+}
+
+.tile {
+  border: 1px solid rgba(10, 10, 10, 0.18);
+  background: #fff;
+  text-align: left;
+  transition:
+    background-color 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tile:hover {
+  border-color: #0a0a0a;
+}
+
+.tileOn {
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+  color: #fff;
+}
+
+.progressRule {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: services-rule 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes services-rule {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hidden,
+  .revealed,
+  .detail,
+  .detailOpen,
+  .flowStep,
+  .flowStepOn,
+  .flowRule,
+  .flowRuleOn,
+  .flowRuleH,
+  .flowRuleHOn,
+  .node,
+  .node:hover,
+  .nodeActive,
+  .arrow,
+  .progressRule {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
