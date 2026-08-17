@@ -117,8 +117,8 @@ export function ServiceCards() {
       <div className="relative mx-auto max-w-6xl px-6 pb-20">
         <header className="ox-services-intro">
           <h2 className="ox-services-display">
-            Three ways
-            <span>we work with you</span>
+            <span className="ox-services-display-light">Three ways</span>
+            <span className="ox-services-display-dark">we work with you</span>
           </h2>
           <p className="ox-services-kicker">
             Pick a lane — or combine them into a complete operating system for your business.
