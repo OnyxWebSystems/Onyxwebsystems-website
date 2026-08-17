@@ -74,7 +74,7 @@ async function main() {
       slug: "onyx-web-systems",
       tagline: "CREATE. CONNECT. CONVERT.",
       phone: process.env.RETELL_PHONE_NUMBER ?? "+10000000000",
-      email: "hello@onyxwebsystems.com",
+      email: "onyxwebsystems@gmail.com",
       website: "https://onyxwebsystems.com",
       whatsapp: process.env.TWILIO_WHATSAPP_FROM ?? "+10000000000",
       timezone: "America/Phoenix",
@@ -416,7 +416,7 @@ async function main() {
       slug: "contact",
       keywords: ["phone", "email", "whatsapp", "contact", "call", "front desk"],
       content:
-        "Primary email: hello@onyxwebsystems.com. Ask to call the front desk and we will share the live number when it is configured. WhatsApp and SMS reach the same front desk thread.",
+        "Primary email: onyxwebsystems@gmail.com. Ask to call the front desk and we will share the live number when it is configured. WhatsApp and SMS reach the same front desk thread.",
     },
   ];
   for (const article of kb) {

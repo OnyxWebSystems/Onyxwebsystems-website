@@ -20,7 +20,7 @@ DATABASE_URL=...          # Neon
 BETTER_AUTH_SECRET=...    # long random
 DEMO_OWNER_EMAIL=demo@onyxwebsystems.com
 DEMO_OWNER_PASSWORD=DemoOnyx2026!
-ONYX_NOTIFY_EMAIL=hello@onyxwebsystems.com   # optional inbox notify on /book
+ONYX_NOTIFY_EMAIL=onyxwebsystems@gmail.com   # inbox notify on /book and project requests
 ```
 
 Seed:
@@ -77,12 +77,45 @@ Messaging webhook (both SMS + WhatsApp):
 
 ## 3. Resend (email)
 
+Verify `onyxwebsystems.com` (or your sending domain) in Resend, then:
+
 ```bash
-RESEND_API_KEY=
-RESEND_FROM_EMAIL=Onyx Web Systems <onboarding@resend.dev>
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=Onyx Web Systems <onyxwebsystems@gmail.com>
+ONYX_NOTIFY_EMAIL=onyxwebsystems@gmail.com
 ```
 
-Used for consultation confirmations (`/book`), appointment confirmations, and optional team notify.
+Used for:
+
+- Professional customer confirmation emails (with the ONYXWEBSYSTEMS logo)
+- Team notification emails when someone books or requests a project
+- `.ics` calendar invitations attached to consultation emails
+
+Until `RESEND_API_KEY` is set, emails are logged as simulated and not delivered.
+
+---
+
+## 3b. Google Calendar (Onyx Web Systems)
+
+This creates and fills a dedicated **Onyx Web Systems** calendar (graphite/black) on the Google account connected to `onyxwebsystems@gmail.com`. Booked consultations are inserted as events and Google emails a calendar notification.
+
+1. Open [Google Cloud Console](https://console.cloud.google.com/) and create (or select) a project.
+2. Enable **Google Calendar API**.
+3. Create OAuth credentials (Desktop app or Web app).
+4. Grant scope `https://www.googleapis.com/auth/calendar`.
+5. Generate a refresh token for the Onyx Google account.
+6. Set:
+
+```bash
+GOOGLE_CALENDAR_CLIENT_ID=
+GOOGLE_CALENDAR_CLIENT_SECRET=
+GOOGLE_CALENDAR_REFRESH_TOKEN=
+GOOGLE_CALENDAR_ID=          # optional; created automatically as "Onyx Web Systems" if empty
+```
+
+On the first booking, the app will create the themed calendar if `GOOGLE_CALENDAR_ID` is blank, then add the meeting and notify attendees.
+
+Customers also receive an `.ics` invite and an “Add to Google Calendar” link, so the meeting still lands on a calendar even before OAuth is connected.
 
 ---
 

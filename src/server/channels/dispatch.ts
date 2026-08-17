@@ -2,6 +2,8 @@ import { createTwilioAdapter } from "./twilio";
 import { createResendAdapter } from "./resend";
 import { logger } from "@/server/logger";
 import type { ChannelStatus } from "./types";
+import { notifyConsultationBooked } from "@/server/email/notifications";
+import { isGoogleCalendarConfigured } from "@/server/calendar/google";
 
 function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
@@ -61,66 +63,28 @@ export async function sendAppointmentConfirmationEmail(input: {
   customerName: string;
   serviceName: string;
   startsAt: Date;
+  endsAt?: Date;
   technicianName?: string | null;
   address?: string | null;
+  customerPhone?: string | null;
+  company?: string | null;
+  details?: string | null;
+  appointmentId?: string;
+  organizationId?: string;
 }) {
-  const when = input.startsAt.toLocaleString("en-US", {
-    timeZone: "America/Phoenix",
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+  return notifyConsultationBooked({
+    customerName: input.customerName,
+    customerEmail: input.toEmail,
+    customerPhone: input.customerPhone,
+    company: input.company,
+    serviceName: input.serviceName,
+    startsAt: input.startsAt,
+    endsAt: input.endsAt,
+    technicianName: input.technicianName,
+    details: input.details ?? input.address,
+    appointmentId: input.appointmentId,
+    organizationId: input.organizationId,
   });
-
-  const body = [
-    `Hi ${input.customerName},`,
-    ``,
-    `Your Onyx Web Systems appointment is confirmed.`,
-    ``,
-    `Service: ${input.serviceName}`,
-    `When: ${when} (Arizona time)`,
-    input.technicianName ? `With: ${input.technicianName}` : null,
-    input.address ? `Location: ${input.address}` : null,
-    ``,
-    `Need to reschedule? Reply to this email or message us on WhatsApp/SMS.`,
-    ``,
-    `— Onyx Web Systems`,
-    `hello@onyxwebsystems.com`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const adapter = createResendAdapter();
-  if (adapter.status !== "CONNECTED") {
-    logger.info("Resend not connected — confirmation email simulated", { to: input.toEmail });
-    return adapter.send({ channel: "email", to: input.toEmail, body });
-  }
-
-  const key = process.env.RESEND_API_KEY!;
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: process.env.RESEND_FROM_EMAIL ?? "Onyx Web Systems <hello@onyxwebsystems.com>",
-      to: [input.toEmail],
-      subject: `Appointment confirmed — ${input.serviceName}`,
-      text: body,
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    logger.error("Resend confirmation failed", { status: res.status, errText });
-    throw new Error("Resend confirmation failed");
-  }
-
-  const data = (await res.json()) as { id?: string };
-  logger.info("Confirmation email sent", { id: data.id, to: input.toEmail });
-  return { ok: true, simulated: false, providerId: data.id };
 }
 
 export function getLiveIntegrationStatuses(): Record<
@@ -165,6 +129,12 @@ export function getLiveIntegrationStatuses(): Record<
         : "Set RESEND_API_KEY for confirmation emails",
     },
     calendar: { status: "CONNECTED", detail: "Internal scheduling engine" },
+    google_calendar: {
+      status: isGoogleCalendarConfigured() ? "CONNECTED" : "READY_FOR_INTEGRATION",
+      detail: isGoogleCalendarConfigured()
+        ? "Onyx Web Systems Google Calendar"
+        : "Set GOOGLE_CALENDAR_CLIENT_ID, GOOGLE_CALENDAR_CLIENT_SECRET, and GOOGLE_CALENDAR_REFRESH_TOKEN",
+    },
     crm: { status: "CONNECTED", detail: "Internal customer records" },
     llm: {
       status: process.env.OPENAI_API_KEY ? "CONNECTED" : "SIMULATED",

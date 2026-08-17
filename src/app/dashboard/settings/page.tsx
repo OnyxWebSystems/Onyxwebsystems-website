@@ -12,6 +12,7 @@ const LABELS: Record<string, string> = {
   sms: "SMS (Twilio)",
   email: "Email confirmations (Resend)",
   calendar: "Internal calendar",
+  google_calendar: "Google Calendar (Onyx Web Systems)",
   crm: "Internal CRM",
   llm: "Language understanding",
   social: "Social inbox",

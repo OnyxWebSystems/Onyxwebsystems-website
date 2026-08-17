@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/server/db";
 import { getDemoOrganization } from "@/server/demo/runner";
 import { createCustomer, findCustomerByPhoneOrEmail, addTimelineEvent } from "@/server/domain/customers";
-import { sendChannelReply } from "@/server/channels/dispatch";
+import { notifyProjectRequest } from "@/server/email/notifications";
 import { publishActivity } from "@/server/events";
 import { rateLimit } from "@/server/security/rate-limit";
 import { logger } from "@/server/logger";
@@ -132,25 +132,18 @@ export async function POST(req: Request) {
     refId: lead.id,
   });
 
-  const notify = process.env.ONYX_NOTIFY_EMAIL || org.email;
-  if (notify) {
-    try {
-      await sendChannelReply({
-        channel: "email",
-        to: notify,
-        body: [
-          "New project request from onyxwebsystems.com/services",
-          "",
-          `${firstName} ${lastName}`,
-          body.email,
-          body.phone,
-          "",
-          summary,
-        ].join("\n"),
-      });
-    } catch (err) {
-      logger.warn("Project request notify email failed", { err });
-    }
+  try {
+    await notifyProjectRequest({
+      customerName: `${firstName} ${lastName}`,
+      customerEmail: body.email,
+      customerPhone: body.phone,
+      company: body.company,
+      lookingFor: interest,
+      summary,
+      organizationId: org.id,
+    });
+  } catch (err) {
+    logger.warn("Project request email failed", { err });
   }
 
   await publishActivity({

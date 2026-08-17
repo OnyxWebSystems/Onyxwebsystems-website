@@ -178,9 +178,13 @@ export async function executeVoiceTool(call: VoiceToolCall): Promise<unknown> {
           await sendAppointmentConfirmationEmail({
             toEmail: (p.email || customer.email)!,
             customerName: `${customer.firstName} ${customer.lastName}`,
+            customerPhone: customer.phone,
             serviceName: service.name,
             startsAt: appointment.startsAt,
+            endsAt: appointment.endsAt,
             technicianName: appointment.employee?.name,
+            appointmentId: appointment.id,
+            organizationId: org.id,
           });
         } catch (error) {
           logger.warn("Voice booking confirmation email failed", { error: String(error) });

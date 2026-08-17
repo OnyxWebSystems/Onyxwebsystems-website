@@ -4,7 +4,7 @@ import { prisma } from "@/server/db";
 import { getDemoOrganization } from "@/server/demo/runner";
 import { bookAppointment } from "@/server/booking/engine";
 import { createCustomer, findCustomerByPhoneOrEmail, addTimelineEvent } from "@/server/domain/customers";
-import { sendAppointmentConfirmationEmail } from "@/server/channels/dispatch";
+import { notifyConsultationBooked } from "@/server/email/notifications";
 import { publishActivity } from "@/server/events";
 import { rateLimit } from "@/server/security/rate-limit";
 import { logger } from "@/server/logger";
@@ -116,30 +116,21 @@ export async function POST(req: Request) {
   });
 
   try {
-    await sendAppointmentConfirmationEmail({
-      toEmail: body.email,
+    await notifyConsultationBooked({
       customerName: `${firstName} ${lastName}`,
+      customerEmail: body.email,
+      customerPhone: body.phone,
+      company: body.company,
       serviceName: "Consultation",
       startsAt: appointment.startsAt,
+      endsAt: appointment.endsAt,
       technicianName: appointment.employee?.name,
+      details: summary,
+      appointmentId: appointment.id,
+      organizationId: org.id,
     });
   } catch (err) {
     logger.warn("Consultation confirmation email failed", { err });
-  }
-
-  const notify = process.env.ONYX_NOTIFY_EMAIL || org.email;
-  if (notify) {
-    try {
-      await sendAppointmentConfirmationEmail({
-        toEmail: notify,
-        customerName: "Onyx team",
-        serviceName: `New consult — ${firstName} ${lastName}`,
-        startsAt: appointment.startsAt,
-        address: summary.slice(0, 500),
-      });
-    } catch (err) {
-      logger.warn("Onyx notify email failed", { err });
-    }
   }
 
   await publishActivity({

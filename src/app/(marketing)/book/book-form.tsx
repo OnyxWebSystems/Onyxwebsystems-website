@@ -201,7 +201,7 @@ export function BookConsultationForm() {
         {loadingSlots ? (
           <p className="mt-3 text-sm text-[#5c5c5c]">Loading availability…</p>
         ) : slots.length === 0 ? (
-          <p className="mt-3 text-sm text-[#5c5c5c]">No open slots — email hello@onyxwebsystems.com</p>
+          <p className="mt-3 text-sm text-[#5c5c5c]">No open slots — email onyxwebsystems@gmail.com</p>
         ) : (
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {slots.map((slot) => (
