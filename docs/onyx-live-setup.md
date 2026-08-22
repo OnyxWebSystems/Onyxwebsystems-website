@@ -77,11 +77,11 @@ Messaging webhook (both SMS + WhatsApp):
 
 ## 3. Resend (email)
 
-Verify `onyxwebsystems.com` (or your sending domain) in Resend, then:
+Verify `onyxwebsystems.com` in Resend for production sending. Until that domain is verified, send from `onboarding@resend.dev`. Replies still go to `onyxwebsystems@gmail.com`. Gmail addresses cannot be used as the From address.
 
 ```bash
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=Onyx Web Systems <onyxwebsystems@gmail.com>
+RESEND_FROM_EMAIL=Onyx Web Systems <onboarding@resend.dev>
 ONYX_NOTIFY_EMAIL=onyxwebsystems@gmail.com
 ```
 

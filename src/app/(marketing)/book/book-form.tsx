@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const BOS_MODULES = [
@@ -18,56 +18,20 @@ const BOS_MODULES = [
   "Custom module",
 ];
 
-type Slot = {
-  startsAt: string;
-  label: string;
-  employeeId: string;
-  employeeName: string;
-};
-
 export function BookConsultationForm() {
   const router = useRouter();
   const [serviceInterest, setServiceInterest] = useState<"bos" | "app" | "web">("bos");
   const [modules, setModules] = useState<string[]>(["Customer Experience / Front Desk"]);
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ when: string; email: string } | null>(null);
-
+  const [done, setDone] = useState<{ email: string; scheduleUrl?: string } | null>(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
     company: "",
     goals: "",
-    startsAt: "",
-    employeeId: "",
   });
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoadingSlots(true);
-      try {
-        const res = await fetch(`/api/public/consultation-slots?days=14`);
-        const data = await res.json();
-        if (!cancelled) setSlots(data.slots ?? []);
-      } catch {
-        if (!cancelled) setError("Could not load availability.");
-      } finally {
-        if (!cancelled) setLoadingSlots(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const selectedSlot = useMemo(
-    () => slots.find((s) => s.startsAt === form.startsAt),
-    [slots, form.startsAt],
-  );
 
   function toggleModule(mod: string) {
     setModules((prev) => (prev.includes(mod) ? prev.filter((m) => m !== mod) : [...prev, mod]));
@@ -85,12 +49,11 @@ export function BookConsultationForm() {
           ...form,
           serviceInterest,
           modules: serviceInterest === "bos" ? modules : [],
-          employeeId: form.employeeId || selectedSlot?.employeeId,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Booking failed");
-      setDone({ when: selectedSlot?.label ?? form.startsAt, email: form.email });
+      setDone({ email: form.email, scheduleUrl: data.scheduleUrl });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Booking failed");
     } finally {
@@ -101,12 +64,17 @@ export function BookConsultationForm() {
   if (done) {
     return (
       <div className="border border-black p-8">
-        <p className="text-sm uppercase tracking-[0.16em] text-[#5c5c5c]">Confirmed</p>
-        <h2 className="mt-3 text-2xl font-semibold">Consultation booked</h2>
+        <p className="text-sm uppercase tracking-[0.16em] text-[#5c5c5c]">Request received</p>
+        <h2 className="mt-3 text-2xl font-semibold">Check your email</h2>
         <p className="mt-3 text-sm text-[#5c5c5c]">
-          We sent a confirmation to <span className="text-black">{done.email}</span>.
+          We sent a confirmation to <span className="text-black">onyxwebsystems@gmail.com</span> (Resend test
+          mode can only deliver to that inbox until a domain is verified).
         </p>
-        <p className="mt-2 text-sm text-[#5c5c5c]">When: {done.when}</p>
+        {done.scheduleUrl ? (
+          <a href={done.scheduleUrl} className="ox-btn-solid mt-6 inline-block px-6 py-3 text-sm font-medium">
+            Choose a consultation time
+          </a>
+        ) : null}
         <button
           type="button"
           className="mt-6 border border-black px-4 py-2 text-sm"
@@ -196,45 +164,10 @@ export function BookConsultationForm() {
         />
       </label>
 
-      <fieldset>
-        <legend className="text-sm text-[#5c5c5c]">Consultation slot (30 min)</legend>
-        {loadingSlots ? (
-          <p className="mt-3 text-sm text-[#5c5c5c]">Loading availability…</p>
-        ) : slots.length === 0 ? (
-          <p className="mt-3 text-sm text-[#5c5c5c]">No open slots — email onyxwebsystems@gmail.com</p>
-        ) : (
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {slots.map((slot) => (
-              <button
-                key={slot.startsAt}
-                type="button"
-                onClick={() =>
-                  setForm((f) => ({
-                    ...f,
-                    startsAt: slot.startsAt,
-                    employeeId: slot.employeeId,
-                  }))
-                }
-                className={`border px-3 py-2 text-left text-sm ${
-                  form.startsAt === slot.startsAt ? "ox-btn-solid border-black" : "border-black/20"
-                }`}
-              >
-                <div className="font-medium">{slot.label}</div>
-                <div className="mt-0.5 text-xs opacity-70">{slot.employeeName}</div>
-              </button>
-            ))}
-          </div>
-        )}
-      </fieldset>
-
       {error ? <p className="text-sm text-[#8b1538]">{error}</p> : null}
 
-      <button
-        type="submit"
-        disabled={submitting || !form.startsAt}
-        className="ox-btn-solid px-6 py-3 text-sm font-medium disabled:opacity-50"
-      >
-        {submitting ? "Booking…" : "Confirm consultation"}
+      <button type="submit" disabled={submitting} className="ox-btn-solid px-6 py-3 text-sm font-medium disabled:opacity-50">
+        {submitting ? "Sending…" : "Request consultation"}
       </button>
     </form>
   );

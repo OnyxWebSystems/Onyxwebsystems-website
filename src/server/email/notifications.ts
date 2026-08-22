@@ -211,3 +211,91 @@ export async function notifyProjectRequest(input: {
     }),
   ]);
 }
+
+export async function notifyConsultationRequested(input: {
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string | null;
+  company?: string | null;
+  serviceName: string;
+  details?: string | null;
+  scheduleUrl: string;
+}) {
+  const firstName = input.customerName.split(" ")[0];
+  const receivedFields = [
+    { label: "Meeting", value: input.serviceName },
+    { label: "Company", value: input.company },
+  ];
+  const scheduleButton = `<p style="margin:24px 0 0;"><a href="${input.scheduleUrl}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;padding:12px 20px;font-size:14px;font-weight:700;">Choose a consultation time</a></p>
+    <p style="margin:12px 0 0;font-size:13px;color:#5c5c5c;">If the button does not work, open this link:<br /><a href="${input.scheduleUrl}" style="color:#0a0a0a;">${input.scheduleUrl}</a></p>`;
+
+  await sendBrandedEmail({
+    to: input.customerEmail,
+    subject: "We received your consultation request — Onyx Web Systems",
+    html: brandedEmailHtml({
+      eyebrow: "Request received",
+      heading: "Your consultation request is booked with our team.",
+      intro: `Dear ${firstName}, thank you for requesting a consultation with Onyx Web Systems. We have your details and will use them to prepare for the conversation.`,
+      fields: receivedFields,
+      closing:
+        "The next email contains a link to choose a date and time from our live calendar. No action is needed until then.",
+    }),
+    text: brandedEmailText({
+      heading: "Your consultation request is booked with our team.",
+      intro: `Dear ${firstName}, thank you for requesting a consultation with Onyx Web Systems.`,
+      fields: receivedFields,
+      closing: "The next email will let you choose a date and time.",
+    }),
+  });
+
+  await sendBrandedEmail({
+    to: input.customerEmail,
+    subject: "Choose your consultation time — Onyx Web Systems",
+    html: brandedEmailHtml({
+      eyebrow: "Schedule your meeting",
+      heading: "Pick a date and time that works for you.",
+      intro: `Dear ${firstName}, use the button below to choose a 30-minute consultation. The times shown are open on the Onyx Web Systems calendar.`,
+      fields: receivedFields,
+      extraHtml: scheduleButton,
+      closing: "After you select a slot, we will send a calendar invitation and add the meeting to Google Calendar.",
+    }),
+    text: brandedEmailText({
+      heading: "Pick a date and time that works for you.",
+      intro: `Dear ${firstName}, choose a 30-minute consultation from our open calendar.`,
+      fields: receivedFields,
+      extra: `Choose a time: ${input.scheduleUrl}`,
+      closing: "After you select a slot, we will send a calendar invitation.",
+    }),
+  });
+
+  await sendBrandedEmail({
+    to: teamInbox(),
+    subject: `Consultation request — ${input.customerName} (awaiting time)`,
+    html: brandedEmailHtml({
+      eyebrow: "New request",
+      heading: "A client requested a consultation and is choosing a time.",
+      intro: `${input.customerName} submitted a consultation request. They have been emailed a link to pick an open slot on the Onyx calendar.`,
+      fields: [
+        { label: "Client", value: input.customerName },
+        { label: "Email", value: input.customerEmail },
+        { label: "Phone", value: input.customerPhone },
+        { label: "Company", value: input.company },
+        { label: "Service", value: input.serviceName },
+        { label: "Notes", value: input.details },
+      ],
+      closing: "The meeting will appear on Google Calendar once they select a slot.",
+    }),
+    text: brandedEmailText({
+      heading: "A client requested a consultation and is choosing a time.",
+      intro: `${input.customerName} submitted a consultation request.`,
+      fields: [
+        { label: "Client", value: input.customerName },
+        { label: "Email", value: input.customerEmail },
+        { label: "Phone", value: input.customerPhone },
+        { label: "Company", value: input.company },
+        { label: "Service", value: input.serviceName },
+        { label: "Notes", value: input.details },
+      ],
+    }),
+  });
+}

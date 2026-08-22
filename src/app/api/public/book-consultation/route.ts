@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/server/db";
 import { getDemoOrganization } from "@/server/demo/runner";
-import { bookAppointment } from "@/server/booking/engine";
 import { createCustomer, findCustomerByPhoneOrEmail, addTimelineEvent } from "@/server/domain/customers";
-import { notifyConsultationBooked } from "@/server/email/notifications";
+import { notifyConsultationRequested } from "@/server/email/notifications";
+import { signScheduleToken } from "@/server/booking/schedule-token";
+import { publicSiteUrl } from "@/server/email/brand";
 import { publishActivity } from "@/server/events";
 import { rateLimit } from "@/server/security/rate-limit";
 import { logger } from "@/server/logger";
@@ -17,8 +18,6 @@ const schema = z.object({
   serviceInterest: z.enum(["bos", "app", "web"]),
   modules: z.array(z.string()).default([]),
   goals: z.string().max(4000).optional().nullable(),
-  startsAt: z.string().min(1),
-  employeeId: z.string().min(1),
 });
 
 const INTEREST_LABEL: Record<string, string> = {
@@ -38,44 +37,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid booking payload" }, { status: 400 });
   }
 
-  const org = await getDemoOrganization();
-  const service =
-    (await prisma.service.findFirst({
-      where: { organizationId: org.id, slug: "consultation" },
-    })) ??
-    (await prisma.service.findFirst({ where: { organizationId: org.id } }));
-
-  if (!service) {
-    return NextResponse.json({ error: "Consultation service not configured" }, { status: 503 });
-  }
-
   const parts = body.name.trim().split(/\s+/);
   const firstName = parts[0] ?? body.name;
   const lastName = parts.slice(1).join(" ") || "Prospect";
-
-  let customer = await findCustomerByPhoneOrEmail(org.id, body.phone, body.email);
-  if (!customer) {
-    customer = await createCustomer({
-      organizationId: org.id,
-      firstName,
-      lastName,
-      email: body.email,
-      phone: body.phone,
-      customerType: "lead",
-    });
-    if (body.company) {
-      await prisma.customer.update({
-        where: { id: customer.id },
-        data: { notes: `Company: ${body.company}` },
-      });
-    }
-  }
-
   const interest = INTEREST_LABEL[body.serviceInterest];
   const moduleLine =
-    body.serviceInterest === "bos" && body.modules.length
-      ? `Modules: ${body.modules.join(", ")}`
-      : null;
+    body.serviceInterest === "bos" && body.modules.length ? `Modules: ${body.modules.join(", ")}` : null;
   const summary = [
     `Website consultation — ${interest}`,
     body.company ? `Company: ${body.company}` : null,
@@ -85,69 +52,103 @@ export async function POST(req: Request) {
     .filter(Boolean)
     .join("\n");
 
-  const appointment = await bookAppointment({
-    organizationId: org.id,
-    customerId: customer.id,
-    serviceId: service.id,
-    employeeId: body.employeeId,
-    startsAt: new Date(body.startsAt),
-    notes: summary,
-  });
-
-  await prisma.lead.create({
-    data: {
-      organizationId: org.id,
-      customerId: customer.id,
-      serviceId: service.id,
-      source: "website",
-      stage: "new",
-      summary,
-    },
-  });
-
-  await addTimelineEvent({
-    customerId: customer.id,
-    type: "appointment_booked",
-    title: "Consultation booked via website",
-    detail: summary,
-    channel: "web",
-    refType: "appointment",
-    refId: appointment.id,
-  });
+  let customerId: string | undefined;
+  let leadId: string | undefined;
+  let organizationId: string | undefined;
 
   try {
-    await notifyConsultationBooked({
-      customerName: `${firstName} ${lastName}`,
+    const org = await getDemoOrganization();
+    organizationId = org.id;
+    const service =
+      (await prisma.service.findFirst({
+        where: { organizationId: org.id, slug: "consultation" },
+      })) ?? (await prisma.service.findFirst({ where: { organizationId: org.id } }));
+
+    let customer = await findCustomerByPhoneOrEmail(org.id, body.phone, body.email);
+    if (!customer) {
+      customer = await createCustomer({
+        organizationId: org.id,
+        firstName,
+        lastName,
+        email: body.email,
+        phone: body.phone,
+        customerType: "lead",
+      });
+      if (body.company) {
+        await prisma.customer.update({
+          where: { id: customer.id },
+          data: { notes: `Company: ${body.company}` },
+        });
+      }
+    }
+    customerId = customer.id;
+
+    const lead = await prisma.lead.create({
+      data: {
+        organizationId: org.id,
+        customerId: customer.id,
+        serviceId: service?.id,
+        source: "website",
+        stage: "new",
+        summary,
+      },
+    });
+    leadId = lead.id;
+
+    await addTimelineEvent({
+      customerId: customer.id,
+      type: "consultation_requested",
+      title: "Consultation requested via website",
+      detail: summary,
+      channel: "web",
+      refType: "lead",
+      refId: lead.id,
+    });
+
+    await publishActivity({
+      organizationId: org.id,
+      type: "lead",
+      title: "Consultation requested",
+      detail: `${firstName} ${lastName} · ${interest}`,
+      metadata: { customerId: customer.id, leadId: lead.id, channel: "website" },
+    });
+  } catch (err) {
+    logger.warn("Consultation request was not saved to the database", { err });
+  }
+
+  const token = signScheduleToken({
+    name: `${firstName} ${lastName}`.trim(),
+    email: body.email,
+    phone: body.phone,
+    company: body.company,
+    serviceInterest: body.serviceInterest,
+    modules: body.modules,
+    goals: body.goals,
+    customerId,
+    leadId,
+    organizationId,
+  });
+  const scheduleUrl = `${publicSiteUrl()}/book/schedule?token=${encodeURIComponent(token)}`;
+
+  try {
+    await notifyConsultationRequested({
+      customerName: `${firstName} ${lastName}`.trim(),
       customerEmail: body.email,
       customerPhone: body.phone,
       company: body.company,
       serviceName: "Consultation",
-      startsAt: appointment.startsAt,
-      endsAt: appointment.endsAt,
-      technicianName: appointment.employee?.name,
       details: summary,
-      appointmentId: appointment.id,
-      organizationId: org.id,
+      scheduleUrl,
     });
   } catch (err) {
-    logger.warn("Consultation confirmation email failed", { err });
+    logger.warn("Consultation request email failed", {
+      err: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json(
+      { error: "We received your request but could not send email. Write to onyxwebsystems@gmail.com." },
+      { status: 502 },
+    );
   }
 
-  await publishActivity({
-    organizationId: org.id,
-    type: "appointment",
-    title: "Consultation booked",
-    detail: `${firstName} ${lastName} · ${interest}`,
-    metadata: {
-      customerId: customer.id,
-      appointmentId: appointment.id,
-      channel: "website",
-    },
-  });
-
-  return NextResponse.json({
-    ok: true,
-    appointmentId: appointment.id,
-    startsAt: appointment.startsAt.toISOString(),
-  });
+  return NextResponse.json({ ok: true, leadId, scheduleUrl });
 }

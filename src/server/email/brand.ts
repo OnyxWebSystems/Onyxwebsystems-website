@@ -2,7 +2,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 export const BRAND_FROM =
-  process.env.RESEND_FROM_EMAIL ?? "Onyx Web Systems <onyxwebsystems@gmail.com>";
+  process.env.RESEND_FROM_EMAIL ?? "Onyx Web Systems <onboarding@resend.dev>";
 export const BRAND_REPLY_TO = process.env.ONYX_NOTIFY_EMAIL ?? "onyxwebsystems@gmail.com";
 export const BRAND_TIMEZONE = "America/Phoenix";
 

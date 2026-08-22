@@ -61,13 +61,26 @@ export function MarketingHeader() {
           <OnyxNavBrand />
         </Link>
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 text-sm md:flex">
-          {nav.map((item) => (
-            <Link key={item.href} href={item.href} className="ox-nav-link">
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {nav.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="ox-nav-link"
+                data-active={active ? "true" : undefined}
+                aria-current={active ? "page" : undefined}
+              >
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
-        <Link href="/book" className="ox-btn-nav relative z-10 hidden px-4 py-2 text-sm font-medium md:inline-flex">
+        <Link
+          href="/book"
+          className="ox-btn-nav relative z-10 hidden px-4 py-2 text-sm font-medium md:inline-flex"
+          data-active={pathname === "/book" || pathname.startsWith("/book/") ? "true" : undefined}
+        >
           <span>Book a Consultation</span>
           <span className="ox-btn-nav-arrow" aria-hidden="true">
             →
