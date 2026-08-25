@@ -225,7 +225,14 @@
 .logoSwap {
   outline: none;
   cursor: pointer;
+  padding: 1.5rem;
   transition: background-color 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.logoSwapFrame {
+  position: relative;
+  height: 100%;
+  width: 100%;
 }
 
 .logoSwap:hover,
@@ -279,28 +286,52 @@
 .lightbox {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 80;
   display: grid;
   place-items: center;
-  padding: 1.5rem;
-  background: rgba(10, 10, 10, 0.92);
+  padding: 1.25rem;
   animation: work-lightbox-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.lightboxFrame {
+.lightboxBackdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(10, 10, 10, 0.94);
+  cursor: pointer;
+}
+
+.lightboxPanel {
   position: relative;
-  width: min(56rem, 100%);
+  z-index: 1;
+  display: flex;
+  width: min(72rem, 100%);
+  flex-direction: column;
+  gap: 1rem;
   animation: work-lightbox-frame 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.lightboxClose {
-  position: absolute;
-  top: -2.75rem;
-  right: 0;
+.lightboxBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.lightboxTitle {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.lightboxClose,
+.lightboxCloseBottom {
   border: 1px solid #ffffff;
   background: transparent;
   color: #ffffff;
-  padding: 0.45rem 0.9rem;
+  padding: 0.7rem 1.15rem;
   font-size: 0.75rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -311,9 +342,27 @@
 }
 
 .lightboxClose:hover,
-.lightboxClose:focus-visible {
+.lightboxClose:focus-visible,
+.lightboxCloseBottom:hover,
+.lightboxCloseBottom:focus-visible {
   background: #ffffff;
   color: #0a0a0a;
+}
+
+.lightboxCloseBottom {
+  align-self: center;
+}
+
+.lightboxVideo {
+  display: block;
+  width: min(100%, calc((100dvh - 11rem) * 16 / 9));
+  height: auto;
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 @keyframes work-lightbox-in {
@@ -361,13 +410,14 @@
 
   .logoSwap,
   .logoLayer,
-  .lightboxClose {
+  .lightboxClose,
+  .lightboxCloseBottom {
     transition: none !important;
   }
 
   .logoEnter,
   .lightbox,
-  .lightboxFrame {
+  .lightboxPanel {
     animation: none !important;
     transform: none !important;
   }

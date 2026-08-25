@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ServicesButton } from "./services-link";
 import styles from "./services.module.css";
 
@@ -8,8 +9,13 @@ const VIDEO_SRC = "/work/thrift-rotate-testimonial.mp4";
 
 export function TestimonialButton({ label = "View testimonial" }: { label?: string }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -17,6 +23,7 @@ export function TestimonialButton({ label = "View testimonial" }: { label?: stri
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
+    void videoRef.current?.play().catch(() => undefined);
 
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
@@ -37,41 +44,47 @@ export function TestimonialButton({ label = "View testimonial" }: { label?: stri
     video.currentTime = 0;
   }, [open]);
 
+  function close() {
+    setOpen(false);
+  }
+
+  const dialog =
+    open && mounted
+      ? createPortal(
+          <div className={styles.lightbox} role="dialog" aria-modal="true" aria-labelledby="thrift-testimonial-title">
+            <button type="button" className={styles.lightboxBackdrop} onClick={close} aria-label="Close testimonial" />
+            <div className={styles.lightboxPanel}>
+              <div className={styles.lightboxBar}>
+                <p id="thrift-testimonial-title" className={styles.lightboxTitle}>
+                  Thrift Rotate · Testimonial
+                </p>
+                <button ref={closeRef} type="button" className={styles.lightboxClose} onClick={close}>
+                  Close
+                </button>
+              </div>
+              <video
+                ref={videoRef}
+                className={styles.lightboxVideo}
+                controls
+                playsInline
+                preload="auto"
+                controlsList="nodownload"
+              >
+                <source src={VIDEO_SRC} type="video/mp4" />
+              </video>
+              <button type="button" className={styles.lightboxCloseBottom} onClick={close}>
+                Close video
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <>
       <ServicesButton onClick={() => setOpen(true)}>{label}</ServicesButton>
-      {open ? (
-        <div
-          className={styles.lightbox}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="thrift-testimonial-title"
-          onClick={() => setOpen(false)}
-        >
-          <div className={styles.lightboxFrame} onClick={(event) => event.stopPropagation()}>
-            <p id="thrift-testimonial-title" className="mb-4 text-xs uppercase tracking-[0.18em] text-white/70">
-              Thrift Rotate · Testimonial
-            </p>
-            <button
-              ref={closeRef}
-              type="button"
-              className={styles.lightboxClose}
-              onClick={() => setOpen(false)}
-            >
-              Close
-            </button>
-            <video
-              ref={videoRef}
-              className="aspect-video w-full border border-white bg-black"
-              controls
-              playsInline
-              preload="metadata"
-            >
-              <source src={VIDEO_SRC} type="video/mp4" />
-            </video>
-          </div>
-        </div>
-      ) : null}
+      {dialog}
     </>
   );
 }

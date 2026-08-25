@@ -23,8 +23,8 @@ export default function WebsitesPage() {
             story="Thrift Rotate is a Hatfield streetwear brand born in the township — inspired by the rich and the poor, driven by faith and ambition. We built them a site that tells that origin story in full, then lets people buy the collection the way the brand actually sells: Instagram and WhatsApp, one rotation at a time."
             stage={
               <LogoSwap
-                whiteSrc="/work/thrift-rotate-white.png"
-                blackSrc="/work/thrift-rotate-black.png"
+                whiteSrc="/work/thrift-rotate-bag-white.png"
+                blackSrc="/work/thrift-rotate-bag-black.png"
                 alt="Thrift Rotate logo"
               />
             }

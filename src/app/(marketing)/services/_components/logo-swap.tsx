@@ -12,22 +12,24 @@ export function LogoSwap({
   alt: string;
 }) {
   return (
-    <div className={styles.logoSwap} tabIndex={0} aria-label={`${alt}. Hover or focus to see the inverted mark.`}>
-      <Image
-        src={whiteSrc}
-        alt=""
-        fill
-        sizes="(min-width: 1024px) 28vw, 90vw"
-        className={cn(styles.logoLayer, styles.logoWhite, "object-cover")}
-        priority
-      />
-      <Image
-        src={blackSrc}
-        alt=""
-        fill
-        sizes="(min-width: 1024px) 28vw, 90vw"
-        className={cn(styles.logoLayer, styles.logoBlack, "object-cover")}
-      />
+    <div className={styles.logoSwap} tabIndex={0} aria-label={`${alt}. Hover or focus to see the black bag.`}>
+      <div className={styles.logoSwapFrame}>
+        <Image
+          src={whiteSrc}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 28vw, 90vw"
+          className={cn(styles.logoLayer, styles.logoWhite, "object-contain")}
+          priority
+        />
+        <Image
+          src={blackSrc}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 28vw, 90vw"
+          className={cn(styles.logoLayer, styles.logoBlack, "object-contain")}
+        />
+      </div>
     </div>
   );
 }
