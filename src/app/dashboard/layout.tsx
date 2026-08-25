@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { isDashboardOperator } from "@/server/auth/operators";
 import { Sidebar } from "@/components/layout/sidebar";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { OnyxLogo } from "@/components/brand/onyx-logo";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) redirect("/login");
+  if (!session || !isDashboardOperator(session.user.email)) redirect("/login");
 
   return (
     <div className="flex min-h-screen items-stretch">
@@ -18,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <OnyxLogo size={48} />
             <div>
               <div className="text-sm font-medium">Onyx Web Systems</div>
-              <div className="text-xs text-[var(--ink-muted)]">Digital front desk · Demo environment</div>
+              <div className="text-xs text-[var(--ink-muted)]">Operator dashboard</div>
             </div>
           </div>
           <div className="flex items-center gap-3 text-xs text-[var(--ink-muted)]">

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { bookWebsiteConsultation } from "@/server/booking/consultation";
+import { intakeIsComplete } from "@/lib/booking-intake";
 import { rateLimit } from "@/server/security/rate-limit";
 import { logger } from "@/server/logger";
 
@@ -14,6 +15,19 @@ const schema = z.object({
   goals: z.string().max(4000).optional().nullable(),
   startsAt: z.string().min(1),
   timeZone: z.string().min(1).max(80).optional().nullable(),
+  intake: z
+    .object({
+      stage: z.string().max(80).optional().nullable(),
+      teamSize: z.string().max(40).optional().nullable(),
+      webNeed: z.array(z.string()).optional(),
+      webFeatures: z.array(z.string()).optional(),
+      existingWebsite: z.string().max(20).optional().nullable(),
+      timeline: z.string().max(40).optional().nullable(),
+      appPlatform: z.array(z.string()).optional(),
+      appUsers: z.array(z.string()).optional(),
+      appFeatures: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -25,6 +39,13 @@ export async function POST(req: Request) {
     body = schema.parse(await req.json());
   } catch {
     return NextResponse.json({ error: "Please complete your details and choose a time." }, { status: 400 });
+  }
+
+  if (body.serviceInterest === "bos" && !body.modules.length) {
+    return NextResponse.json({ error: "Select at least one BOS module." }, { status: 400 });
+  }
+  if (!intakeIsComplete(body.serviceInterest, body.intake)) {
+    return NextResponse.json({ error: "Choose the service details so we can prepare for the meeting." }, { status: 400 });
   }
 
   const startsAt = new Date(body.startsAt);

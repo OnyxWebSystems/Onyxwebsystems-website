@@ -18,8 +18,8 @@ Also set:
 ```bash
 DATABASE_URL=...          # Neon
 BETTER_AUTH_SECRET=...    # long random
-DEMO_OWNER_EMAIL=demo@onyxwebsystems.com
-DEMO_OWNER_PASSWORD=DemoOnyx2026!
+DASHBOARD_OPERATOR_NATHY_PASSWORD=...
+DASHBOARD_OPERATOR_BHUMBA_PASSWORD=...
 ONYX_NOTIFY_EMAIL=onyxwebsystems@gmail.com   # inbox notify on /book and project requests
 ```
 
@@ -142,7 +142,7 @@ Customers also receive an `.ics` invite and an “Add to Google Calendar” link
 9. Settings — Retell / Twilio / Resend statuses truthful (no fake CONNECTED)  
 10. Close story: Customer Experience module inside a Business Operating System  
 
-Demo login: `demo@onyxwebsystems.com` / `DemoOnyx2026!`
+Operator login: allowlisted Gmail + password, then emailed verification code.
 
 ---
 

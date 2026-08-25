@@ -4,26 +4,73 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SlotPicker } from "@/components/booking/slot-picker";
 import { BUSINESS_TIMEZONE, formatInTimeZone } from "@/lib/timezones";
+import {
+  APP_FEATURES,
+  APP_PLATFORMS,
+  APP_USERS,
+  BOS_MODULES,
+  BOS_STAGES,
+  EXISTING_WEBSITE,
+  TEAM_SIZES,
+  TIMELINES,
+  WEB_FEATURES,
+  WEB_NEEDS,
+  intakeIsComplete,
+  type BookingIntake,
+  type ServiceInterest,
+} from "@/lib/booking-intake";
 
-const BOS_MODULES = [
-  "Customer Experience / Front Desk",
-  "Lead Management & Speed-to-Lead",
-  "Sales & CRM",
-  "Marketing",
-  "Operations",
-  "Customer Support",
-  "Internal Comms",
-  "Reporting & Analytics",
-  "Follow-Ups",
-  "Document / Data Processing",
-  "Custom Agents / Workflows",
-  "Custom module",
-];
+function ChoiceGroup({
+  legend,
+  options,
+  value,
+  onChange,
+  multiple,
+}: {
+  legend: string;
+  options: readonly string[];
+  value: string | string[];
+  onChange: (next: string | string[]) => void;
+  multiple?: boolean;
+}) {
+  function toggle(option: string) {
+    if (multiple) {
+      const current = Array.isArray(value) ? value : [];
+      onChange(current.includes(option) ? current.filter((item) => item !== option) : [...current, option]);
+      return;
+    }
+    onChange(option);
+  }
+
+  return (
+    <fieldset>
+      <legend className="text-sm text-[#5c5c5c]">{legend}</legend>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {options.map((option) => {
+          const checked = multiple ? Array.isArray(value) && value.includes(option) : value === option;
+          return (
+            <label key={option} className="flex items-start gap-2 border border-black/15 px-3 py-2 text-sm">
+              <input
+                type={multiple ? "checkbox" : "radio"}
+                name={legend}
+                checked={checked}
+                onChange={() => toggle(option)}
+                className="mt-1"
+              />
+              <span>{option}</span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
 
 export function BookConsultationForm() {
   const router = useRouter();
-  const [serviceInterest, setServiceInterest] = useState<"bos" | "app" | "web">("bos");
+  const [serviceInterest, setServiceInterest] = useState<ServiceInterest>("bos");
   const [modules, setModules] = useState<string[]>(["Customer Experience / Front Desk"]);
+  const [intake, setIntake] = useState<BookingIntake>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startsAt, setStartsAt] = useState("");
@@ -47,6 +94,14 @@ export function BookConsultationForm() {
       setError("Please choose a date and time before requesting a consultation.");
       return;
     }
+    if (serviceInterest === "bos" && modules.length === 0) {
+      setError("Select at least one BOS module so we know what to prepare.");
+      return;
+    }
+    if (!intakeIsComplete(serviceInterest, intake)) {
+      setError("Choose the service details below so we can prepare for the meeting.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -57,6 +112,7 @@ export function BookConsultationForm() {
           ...form,
           serviceInterest,
           modules: serviceInterest === "bos" ? modules : [],
+          intake,
           startsAt,
           timeZone,
         }),
@@ -131,7 +187,10 @@ export function BookConsultationForm() {
             <button
               key={value}
               type="button"
-              onClick={() => setServiceInterest(value)}
+              onClick={() => {
+                setServiceInterest(value);
+                setIntake({});
+              }}
               className={`border px-3 py-2 text-sm ${
                 serviceInterest === value ? "ox-btn-solid border-black" : "border-black/20"
               }`}
@@ -143,22 +202,99 @@ export function BookConsultationForm() {
       </fieldset>
 
       {serviceInterest === "bos" ? (
-        <fieldset>
-          <legend className="text-sm text-[#5c5c5c]">BOS modules (select all that apply)</legend>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {BOS_MODULES.map((mod) => (
-              <label key={mod} className="flex items-start gap-2 border border-black/15 px-3 py-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={modules.includes(mod)}
-                  onChange={() => toggleModule(mod)}
-                  className="mt-1"
-                />
-                <span>{mod}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <>
+          <fieldset>
+            <legend className="text-sm text-[#5c5c5c]">BOS modules (select all that apply)</legend>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {BOS_MODULES.map((mod) => (
+                <label key={mod} className="flex items-start gap-2 border border-black/15 px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={modules.includes(mod)}
+                    onChange={() => toggleModule(mod)}
+                    className="mt-1"
+                  />
+                  <span>{mod}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <ChoiceGroup
+            legend="Where are you in the process?"
+            options={BOS_STAGES}
+            value={intake.stage ?? ""}
+            onChange={(next) => setIntake((prev) => ({ ...prev, stage: String(next) }))}
+          />
+          <ChoiceGroup
+            legend="Team size"
+            options={TEAM_SIZES}
+            value={intake.teamSize ?? ""}
+            onChange={(next) => setIntake((prev) => ({ ...prev, teamSize: String(next) }))}
+          />
+        </>
+      ) : null}
+
+      {serviceInterest === "web" ? (
+        <>
+          <ChoiceGroup
+            legend="What do you need?"
+            options={WEB_NEEDS}
+            value={intake.webNeed ?? []}
+            onChange={(next) => setIntake((prev) => ({ ...prev, webNeed: Array.isArray(next) ? next : [next] }))}
+            multiple
+          />
+          <ChoiceGroup
+            legend="Which pages or features matter?"
+            options={WEB_FEATURES}
+            value={intake.webFeatures ?? []}
+            onChange={(next) => setIntake((prev) => ({ ...prev, webFeatures: Array.isArray(next) ? next : [next] }))}
+            multiple
+          />
+          <ChoiceGroup
+            legend="Do you already have a website?"
+            options={EXISTING_WEBSITE}
+            value={intake.existingWebsite ?? ""}
+            onChange={(next) => setIntake((prev) => ({ ...prev, existingWebsite: String(next) }))}
+          />
+          <ChoiceGroup
+            legend="Timeline"
+            options={TIMELINES}
+            value={intake.timeline ?? ""}
+            onChange={(next) => setIntake((prev) => ({ ...prev, timeline: String(next) }))}
+          />
+        </>
+      ) : null}
+
+      {serviceInterest === "app" ? (
+        <>
+          <ChoiceGroup
+            legend="Platform"
+            options={APP_PLATFORMS}
+            value={intake.appPlatform ?? []}
+            onChange={(next) => setIntake((prev) => ({ ...prev, appPlatform: Array.isArray(next) ? next : [next] }))}
+            multiple
+          />
+          <ChoiceGroup
+            legend="Who will use it?"
+            options={APP_USERS}
+            value={intake.appUsers ?? []}
+            onChange={(next) => setIntake((prev) => ({ ...prev, appUsers: Array.isArray(next) ? next : [next] }))}
+            multiple
+          />
+          <ChoiceGroup
+            legend="Which features should we prepare for?"
+            options={APP_FEATURES}
+            value={intake.appFeatures ?? []}
+            onChange={(next) => setIntake((prev) => ({ ...prev, appFeatures: Array.isArray(next) ? next : [next] }))}
+            multiple
+          />
+          <ChoiceGroup
+            legend="Timeline"
+            options={TIMELINES}
+            value={intake.timeline ?? ""}
+            onChange={(next) => setIntake((prev) => ({ ...prev, timeline: String(next) }))}
+          />
+        </>
       ) : null}
 
       <label className="block text-sm">
@@ -168,7 +304,7 @@ export function BookConsultationForm() {
           className="w-full border border-black/20 bg-white px-3 py-2 outline-none focus:border-black"
           value={form.goals}
           onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))}
-          placeholder="What are you trying to create, connect, or convert?"
+          placeholder="Anything else we should prepare for before the meeting?"
         />
       </label>
 

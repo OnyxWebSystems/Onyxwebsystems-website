@@ -7,6 +7,8 @@ import { CONSULTATION_MINUTES, consultationSlotIsBookable } from "@/server/calen
 import { canRescheduleMeeting, resolveDisplayTimeZone } from "@/server/calendar/timezone";
 import { publishActivity } from "@/server/events";
 import { logger } from "@/server/logger";
+import { recordWebIntake } from "@/server/activity/web-intake";
+import { intakeSummaryLines, type BookingIntake } from "@/lib/booking-intake";
 
 export const INTEREST_LABEL: Record<string, string> = {
   bos: "Business Operating Systems",
@@ -22,6 +24,7 @@ export type WebsiteBookingInput = {
   serviceInterest: "bos" | "app" | "web";
   modules: string[];
   goals?: string | null;
+  intake?: BookingIntake;
   startsAt: Date;
   timeZone?: string | null;
 };
@@ -54,6 +57,7 @@ export async function bookWebsiteConsultation(input: WebsiteBookingInput) {
     `Website consultation — ${interest}`,
     input.company ? `Company: ${input.company}` : null,
     moduleLine,
+    ...intakeSummaryLines(input.serviceInterest, input.intake),
     input.goals ? `Goals: ${input.goals}` : null,
   ]
     .filter(Boolean)
@@ -120,6 +124,14 @@ export async function bookWebsiteConsultation(input: WebsiteBookingInput) {
     channel: "web",
     refType: "appointment",
     refId: appointment.id,
+  });
+
+  await recordWebIntake({
+    organizationId: org.id,
+    customerId: customer.id,
+    subject: `Website consultation — ${interest}`,
+    summary,
+    intent: "consultation",
   });
 
   await publishActivity({

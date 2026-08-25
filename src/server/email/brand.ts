@@ -23,8 +23,12 @@ export function dashboardSiteUrl() {
   ).replace(/\/$/, "");
 }
 
+export function emailCardsUrl() {
+  return `${publicSiteUrl()}/brand/onyx-email-cards.png`;
+}
+
 export function emailLogoUrl() {
-  return `${publicSiteUrl()}/brand/onyx-email-mark.png`;
+  return emailCardsUrl();
 }
 
 export function emailWordmarkUrl() {
@@ -92,8 +96,7 @@ export function brandedEmailHtml(input: {
     input.closing ??
     "If you have any questions, reply to this email or write to onyxwebsystems@gmail.com.";
   const site = publicSiteUrl();
-  const logo = emailLogoUrl();
-  const wordmark = emailWordmarkUrl();
+  const cards = emailCardsUrl();
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -108,10 +111,10 @@ export function brandedEmailHtml(input: {
       <td align="center" style="padding:40px 16px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;">
           <tr>
-            <td align="center" style="padding:48px 40px 32px;border-bottom:1px solid #0a0a0a;">
-              <a href="${escapeHtml(logo)}" download="onyxweb-systems.png" style="display:inline-block;text-decoration:none;">
-                <img src="${escapeHtml(logo)}" alt="ONYXWEB SYSTEMS — Create. Connect. Convert." width="220" style="display:block;margin:0 auto;width:220px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
-              </a>
+            <td align="center" style="padding:40px 40px 28px;border-bottom:1px solid #0a0a0a;">
+              <img src="${escapeHtml(cards)}" alt="" width="72" style="display:block;margin:0 auto 16px;width:72px;height:auto;border:0;outline:none;text-decoration:none;" />
+              <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:15px;letter-spacing:0.38em;text-transform:uppercase;color:#0a0a0a;font-weight:700;">ONYXWEBSYSTEMS</p>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#7a7a76;">CREATE. CONNECT. CONVERT.</p>
             </td>
           </tr>
           <tr>
@@ -148,9 +151,6 @@ export function brandedEmailHtml(input: {
           </tr>
           <tr>
             <td align="center" style="padding:36px 40px 44px;border-top:1px solid #ecece8;">
-              <a href="${escapeHtml(wordmark)}" download="onyxweb-systems-wordmark.png" style="display:inline-block;text-decoration:none;">
-                <img src="${escapeHtml(wordmark)}" alt="ONYXWEBSYSTEMS" width="248" style="display:block;margin:0 auto 18px;width:248px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
-              </a>
               <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.08em;line-height:1.7;color:#7a7a76;">
                 Technology partner for operators who want systems that create, connect, and convert.
               </p>

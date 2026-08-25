@@ -5,6 +5,7 @@ import { getDemoOrganization } from "@/server/demo/runner";
 import { createCustomer, findCustomerByPhoneOrEmail, addTimelineEvent } from "@/server/domain/customers";
 import { notifyProjectRequest } from "@/server/email/notifications";
 import { publishActivity } from "@/server/events";
+import { recordWebIntake } from "@/server/activity/web-intake";
 import { rateLimit } from "@/server/security/rate-limit";
 import { logger } from "@/server/logger";
 
@@ -130,6 +131,14 @@ export async function POST(req: Request) {
     channel: "web",
     refType: "lead",
     refId: lead.id,
+  });
+
+  await recordWebIntake({
+    organizationId: org.id,
+    customerId: customer.id,
+    subject: `Project request — ${interest}`,
+    summary,
+    intent: "lead",
   });
 
   try {

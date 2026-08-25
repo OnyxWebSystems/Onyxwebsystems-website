@@ -49,25 +49,59 @@ async function main() {
   await prisma.account.deleteMany();
   await prisma.user.deleteMany();
 
-  const email = process.env.DEMO_OWNER_EMAIL ?? "demo@onyxwebsystems.com";
-  const password = process.env.DEMO_OWNER_PASSWORD ?? "DemoOnyx2026!";
-  const hashed = await hashPassword(password);
+  const nathyPassword = process.env.DASHBOARD_OPERATOR_NATHY_PASSWORD;
+  const bhumbaPassword = process.env.DASHBOARD_OPERATOR_BHUMBA_PASSWORD;
+  if (!nathyPassword || !bhumbaPassword) {
+    throw new Error("Set DASHBOARD_OPERATOR_NATHY_PASSWORD and DASHBOARD_OPERATOR_BHUMBA_PASSWORD to seed operator logins.");
+  }
 
-  const user = await prisma.user.create({
+  const nathy = await prisma.user.create({
     data: {
-      name: "Onyx Demo",
-      email,
+      name: "Nathy Simelane",
+      email: "nathysimelanei@gmail.com",
       emailVerified: true,
       role: "owner",
+      twoFactorEnabled: true,
       accounts: {
         create: {
-          accountId: email,
+          accountId: "nathysimelanei@gmail.com",
           providerId: "credential",
-          password: hashed,
+          password: await hashPassword(nathyPassword),
+        },
+      },
+      twoFactor: {
+        create: {
+          secret: "seed-nathy-totp",
+          backupCodes: "[]",
+          verified: true,
         },
       },
     },
   });
+  await prisma.user.create({
+    data: {
+      name: "Bhumba Simelane",
+      email: "bhumbasimelane@gmail.com",
+      emailVerified: true,
+      role: "manager",
+      twoFactorEnabled: true,
+      accounts: {
+        create: {
+          accountId: "bhumbasimelane@gmail.com",
+          providerId: "credential",
+          password: await hashPassword(bhumbaPassword),
+        },
+      },
+      twoFactor: {
+        create: {
+          secret: "seed-bhumba-totp",
+          backupCodes: "[]",
+          verified: true,
+        },
+      },
+    },
+  });
+  const user = nathy;
 
   const org = await prisma.organization.create({
     data: {

@@ -118,6 +118,37 @@ export async function listActivityThreads(organizationId: string, take = 40): Pr
     });
   }
 
+  const seen = new Set(threads.map((t) => t.customerId).filter((id): id is string => Boolean(id)));
+  const extras = await prisma.customer.findMany({
+    where: {
+      organizationId,
+      ...(seen.size ? { id: { notIn: [...seen] } } : {}),
+      OR: [{ leads: { some: {} } }, { appointments: { some: {} } }],
+    },
+    include: {
+      leads: { orderBy: { createdAt: "desc" }, take: 1 },
+      appointments: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
+    take: take + 20,
+  });
+  for (const customer of extras) {
+    const latestLead = customer.leads[0];
+    const latestAppt = customer.appointments[0];
+    const lastAt = latestLead?.createdAt ?? latestAppt?.createdAt ?? customer.createdAt;
+    threads.push({
+      id: customer.id,
+      customerId: customer.id,
+      name: customerName(customer),
+      identity: identityFor(customer, "web"),
+      intentLabel: latestAppt ? "consultation" : "lead",
+      channel: "web",
+      lastAt: lastAt.toISOString(),
+      preview: latestLead?.summary || latestAppt?.notes || "Website enquiry",
+      conversationCount: 0,
+      openItems: 1,
+    });
+  }
+
   return threads
     .sort((a, b) => new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime())
     .slice(0, take);
@@ -227,7 +258,7 @@ export async function getActivityThread(
   ]);
 
   const latest = conversations[0];
-  const channel = latest?.channel ?? "phone";
+  const channel = latest?.channel ?? (appointments.length || tickets.length ? "web" : "phone");
 
   return {
     id: customerId ?? threadId,

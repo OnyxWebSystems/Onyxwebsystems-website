@@ -35,6 +35,10 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const org = await getDemoOrganization();
   const timezone = await ensureBusinessTimezone(org.id, org.timezone);
+  const from = new Date();
+  from.setUTCMonth(from.getUTCMonth() - 2);
+  from.setUTCDate(1);
+  from.setUTCHours(0, 0, 0, 0);
   const [overrides, appointments] = await Promise.all([
     prisma.availabilityOverride.findMany({
       where: { organizationId: org.id },
@@ -44,11 +48,11 @@ export async function GET() {
       where: {
         organizationId: org.id,
         status: { notIn: ["cancelled", "no_show"] },
-        startsAt: { gte: new Date() },
+        startsAt: { gte: from },
       },
       orderBy: { startsAt: "asc" },
-      include: { customer: true },
-      take: 80,
+      include: { customer: true, service: true },
+      take: 200,
     }),
   ]);
   return NextResponse.json({
@@ -61,8 +65,17 @@ export async function GET() {
       endsAt: a.endsAt.toISOString(),
       status: a.status,
       customer: `${a.customer.firstName} ${a.customer.lastName}`.trim(),
+      company: companyFromNotes(a.customer.notes, a.notes),
+      service: a.service.name,
+      notes: a.notes,
+      guestTimeZone: a.guestTimeZone,
     })),
   });
+}
+
+function companyFromNotes(customerNotes?: string | null, appointmentNotes?: string | null) {
+  const match = (customerNotes ?? "").match(/^Company:\s*(.+)$/m) ?? (appointmentNotes ?? "").match(/^Company:\s*(.+)$/m);
+  return match?.[1]?.trim() || null;
 }
 
 export async function PUT(req: Request) {

@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BUSINESS_TIMEZONE, formatInTimeZone } from "@/lib/timezones";
+import {
+  BUSINESS_TIMEZONE,
+  COMMON_TIMEZONES,
+  formatInTimeZone,
+  timezoneLabel,
+  ymdInZone,
+} from "@/lib/timezones";
 
 type Hours = { open: string; close: string } | null;
 type BusinessHours = Record<"sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat", Hours>;
@@ -41,6 +47,10 @@ type Appointment = {
   endsAt: string;
   status: string;
   customer: string;
+  company: string | null;
+  service: string | null;
+  notes: string | null;
+  guestTimeZone: string | null;
 };
 
 function dateKeyFromIsoDate(value: string) {
@@ -58,6 +68,7 @@ export function AvailabilityCalendar() {
   const [message, setMessage] = useState<string | null>(null);
   const [customOpen, setCustomOpen] = useState("09:00");
   const [customClose, setCustomClose] = useState("17:00");
+  const [viewTimeZone, setViewTimeZone] = useState<string>(BUSINESS_TIMEZONE);
 
   async function load() {
     const res = await fetch("/api/dashboard/availability");
@@ -80,13 +91,13 @@ export function AvailabilityCalendar() {
   const bookedByDate = useMemo(() => {
     const map = new Map<string, Appointment[]>();
     for (const appt of appointments) {
-      const key = new Date(appt.startsAt).toLocaleDateString("en-CA", { timeZone: BUSINESS_TIMEZONE });
+      const key = ymdInZone(new Date(appt.startsAt), viewTimeZone);
       const list = map.get(key) ?? [];
       list.push(appt);
       map.set(key, list);
     }
     return map;
-  }, [appointments]);
+  }, [appointments, viewTimeZone]);
 
   const cells = useMemo(() => {
     const first = new Date(Date.UTC(cursor.y, cursor.m, 1));
@@ -219,12 +230,26 @@ export function AvailabilityCalendar() {
       </section>
 
       <section className="border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold">{monthLabel}</h2>
             <p className="mt-1 text-xs text-[var(--ink-muted)]">Click a day to block it, open custom hours, or review bookings.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-xs text-[var(--ink-muted)]">
+              Timezone
+              <select
+                className="mt-1 block border border-[var(--line)] bg-transparent px-2 py-1 text-sm text-[var(--ink)]"
+                value={viewTimeZone}
+                onChange={(e) => setViewTimeZone(e.target.value)}
+              >
+                {COMMON_TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {timezoneLabel(tz)}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               type="button"
               className="ox-btn-ghost px-3 py-1 text-sm"
@@ -347,11 +372,32 @@ export function AvailabilityCalendar() {
                 <p className="text-xs text-[var(--ink-muted)]">No consultations booked on this day.</p>
               ) : (
                 selectedBookings.map((appt) => (
-                  <div key={appt.id} className="border border-[var(--line)] px-3 py-2 text-sm">
+                  <div key={appt.id} className="border border-[var(--line)] px-3 py-3 text-sm">
                     <div className="font-medium">{appt.customer}</div>
-                    <div className="text-xs text-[var(--ink-muted)]">
-                      {formatInTimeZone(new Date(appt.startsAt), BUSINESS_TIMEZONE)} · {appt.status}
+                    <div className="mt-1 text-xs text-[var(--ink-muted)]">
+                      {formatInTimeZone(new Date(appt.startsAt), viewTimeZone)} · {appt.status}
                     </div>
+                    {appt.company ? (
+                      <p className="mt-2 text-xs">
+                        <span className="text-[var(--ink-muted)]">Company:</span> {appt.company}
+                      </p>
+                    ) : null}
+                    {appt.service ? (
+                      <p className="mt-1 text-xs">
+                        <span className="text-[var(--ink-muted)]">Meeting:</span> {appt.service}
+                        {appt.customer ? ` with ${appt.customer}` : ""}
+                      </p>
+                    ) : null}
+                    {appt.notes ? (
+                      <pre className="mt-2 whitespace-pre-wrap font-sans text-xs leading-relaxed text-[var(--ink)]">
+                        {appt.notes}
+                      </pre>
+                    ) : (
+                      <p className="mt-2 text-xs text-[var(--ink-muted)]">No prep notes on this booking.</p>
+                    )}
+                    {appt.guestTimeZone ? (
+                      <p className="mt-2 text-[11px] text-[var(--ink-muted)]">Guest timezone: {timezoneLabel(appt.guestTimeZone)}</p>
+                    ) : null}
                   </div>
                 ))
               )}

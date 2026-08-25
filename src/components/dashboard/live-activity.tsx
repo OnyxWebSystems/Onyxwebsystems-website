@@ -74,7 +74,7 @@ export function LiveActivity({
         ))}
         {!threads.length ? (
           <p className="text-sm text-[var(--ink-muted)]">
-            No customer threads yet. A live call or enquiry will appear here as one thread per person.
+            No customer threads yet. A website booking, call, or enquiry will appear here as one thread per person.
           </p>
         ) : null}
       </div>

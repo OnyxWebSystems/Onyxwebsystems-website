@@ -20,10 +20,9 @@ Open [http://localhost:3000/login](http://localhost:3000/login) (or the port Nex
 
 If the app starts on another port, set `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL` to match.
 
-**Demo login**
+**Operator login**
 
-- Email: `demo@onyxwebsystems.com`
-- Password: `DemoOnyx2026!`
+Sign in with an allowlisted operator Gmail. A verification code is emailed after the password step. Set `DASHBOARD_OPERATOR_NATHY_PASSWORD` and `DASHBOARD_OPERATOR_BHUMBA_PASSWORD` before `npm run db:seed` or `npx tsx scripts/ensure-operators.ts`.
 
 ## Live channels (primary Loom)
 

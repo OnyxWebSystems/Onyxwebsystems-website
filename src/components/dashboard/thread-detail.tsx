@@ -21,6 +21,7 @@ function channelLabel(channel: string) {
   if (channel === "sms") return "SMS";
   if (channel === "instagram") return "Instagram";
   if (channel === "facebook") return "Facebook";
+  if (channel === "web") return "Website";
   return channel;
 }
 
