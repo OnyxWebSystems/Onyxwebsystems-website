@@ -756,7 +756,7 @@ async function main() {
   });
 
   console.log("Seed complete.");
-  console.log(`Login: ${email} / ${password}`);
+  console.log("Login: nathysimelanei@gmail.com and bhumbasimelane@gmail.com (password + emailed code)");
   console.log(`Organization: ${org.name} (${org.id})`);
 }
 
