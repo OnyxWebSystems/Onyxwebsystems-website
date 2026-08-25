@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listConsultationSlots } from "@/server/calendar/slots";
+import { processConsultationReminders } from "@/server/booking/reminders";
 import { getDemoOrganization } from "@/server/demo/runner";
 import { rateLimit } from "@/server/security/rate-limit";
 import { logger } from "@/server/logger";
@@ -18,6 +19,9 @@ export async function GET(req: Request) {
       organizationId: org.id,
       days,
       timeZone,
+    });
+    void processConsultationReminders().catch((error) => {
+      logger.warn("Opportunistic reminder pass failed", { error: String(error) });
     });
     return NextResponse.json(result);
   } catch (error) {
