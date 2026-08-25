@@ -80,14 +80,24 @@ export function ProjectIntake() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    function onPreset(event: Event) {
-      const lookingFor = (event as CustomEvent<{ lookingFor?: LookingFor }>).detail?.lookingFor;
-      if (!lookingFor) return;
+    function applyLookingFor(lookingFor: LookingFor) {
       setForm((f) => ({ ...f, lookingFor }));
       setStep(0);
       setDone(false);
       setError(null);
     }
+
+    function onPreset(event: Event) {
+      const lookingFor = (event as CustomEvent<{ lookingFor?: LookingFor }>).detail?.lookingFor;
+      if (!lookingFor) return;
+      applyLookingFor(lookingFor);
+    }
+
+    const intent = new URLSearchParams(window.location.search).get("intent");
+    if (intent === "website" || intent === "application") {
+      applyLookingFor(intent);
+    }
+
     window.addEventListener(INTAKE_PRESET_EVENT, onPreset);
     return () => window.removeEventListener(INTAKE_PRESET_EVENT, onPreset);
   }, []);

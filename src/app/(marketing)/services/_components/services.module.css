@@ -187,6 +187,155 @@
   }
 }
 
+.workBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.875rem;
+  color: #5c5c5c;
+  transition: color 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.workBackArrow {
+  display: inline-block;
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.workBack:hover,
+.workBack:focus-visible {
+  color: #0a0a0a;
+}
+
+.workBack:hover .workBackArrow,
+.workBack:focus-visible .workBackArrow {
+  transform: translateX(-4px);
+}
+
+.logoStage,
+.logoSwap {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 28rem;
+  overflow: hidden;
+  border: 1px solid #0a0a0a;
+  background: #0a0a0a;
+}
+
+.logoSwap {
+  outline: none;
+  cursor: pointer;
+  transition: background-color 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.logoSwap:hover,
+.logoSwap:focus-visible {
+  background: #ffffff;
+}
+
+.logoSwap:focus-visible {
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 3px #0a0a0a;
+}
+
+.logoLayer {
+  transition: opacity 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.logoWhite {
+  opacity: 1;
+}
+
+.logoBlack {
+  opacity: 0;
+}
+
+.logoSwap:hover .logoWhite,
+.logoSwap:focus-visible .logoWhite {
+  opacity: 0;
+}
+
+.logoSwap:hover .logoBlack,
+.logoSwap:focus-visible .logoBlack {
+  opacity: 1;
+}
+
+.logoEnter {
+  animation: work-logo-enter 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes work-logo-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(10, 10, 10, 0.92);
+  animation: work-lightbox-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lightboxFrame {
+  position: relative;
+  width: min(56rem, 100%);
+  animation: work-lightbox-frame 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lightboxClose {
+  position: absolute;
+  top: -2.75rem;
+  right: 0;
+  border: 1px solid #ffffff;
+  background: transparent;
+  color: #ffffff;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lightboxClose:hover,
+.lightboxClose:focus-visible {
+  background: #ffffff;
+  color: #0a0a0a;
+}
+
+@keyframes work-lightbox-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes work-lightbox-frame {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hidden,
   .revealed,
@@ -202,10 +351,24 @@
   .node:hover,
   .nodeActive,
   .arrow,
-  .progressRule {
+  .progressRule,
+  .workBackArrow {
     animation: none !important;
     transition: none !important;
     transform: none !important;
     opacity: 1 !important;
+  }
+
+  .logoSwap,
+  .logoLayer,
+  .lightboxClose {
+    transition: none !important;
+  }
+
+  .logoEnter,
+  .lightbox,
+  .lightboxFrame {
+    animation: none !important;
+    transform: none !important;
   }
 }

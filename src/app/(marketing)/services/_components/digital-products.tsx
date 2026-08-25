@@ -24,7 +24,7 @@ export function DigitalProducts() {
                     High-performance websites designed around your brand, audience and business goals.
                   </p>
                   <div className="mt-8">
-                    <ServicesLink href="#start-a-project" variant="ghost">
+                    <ServicesLink href="/services/websites" variant="ghost">
                       Explore websites
                     </ServicesLink>
                   </div>
@@ -60,7 +60,7 @@ export function DigitalProducts() {
                     — a nightlife operations and guest experience platform.
                   </p>
                   <div className="mt-8">
-                    <ServicesLink href="#start-a-project" variant="ghost">
+                    <ServicesLink href="/services/applications" variant="ghost">
                       Explore applications
                     </ServicesLink>
                   </div>

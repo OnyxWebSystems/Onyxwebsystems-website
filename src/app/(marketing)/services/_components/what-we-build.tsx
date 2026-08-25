@@ -42,10 +42,10 @@ export function WhatWeBuild() {
                     goals.
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
-                    <ServicesLink href="#websites" variant="ghost">
+                    <ServicesLink href="/services/websites" variant="ghost">
                       Explore websites
                     </ServicesLink>
-                    <ServicesLink href="#applications" variant="ghost">
+                    <ServicesLink href="/services/applications" variant="ghost">
                       Explore applications
                     </ServicesLink>
                   </div>

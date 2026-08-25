@@ -16,10 +16,12 @@ export function ServicesLink({
   variant?: Variant;
   className?: string;
 }) {
+  const external = href.startsWith("http://") || href.startsWith("https://");
   return (
     <Link
       href={href}
       className={cn(styles.cta, variant === "solid" ? styles.ctaSolid : styles.ctaGhost, className)}
+      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
     >
       <span>{children}</span>
       <span className={styles.arrow} aria-hidden>
