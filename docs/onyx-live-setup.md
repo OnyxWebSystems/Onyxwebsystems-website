@@ -77,11 +77,11 @@ Messaging webhook (both SMS + WhatsApp):
 
 ## 3. Resend (email)
 
-Verify `onyxwebsystems.com` in Resend for production sending. Until that domain is verified, send from `onboarding@resend.dev`. Replies still go to `onyxwebsystems@gmail.com`. Gmail addresses cannot be used as the From address.
+Verify `onyxwebsystems.co.za` in Resend for production sending. Until that domain is verified, send from `onboarding@resend.dev`. Replies still go to `onyxwebsystems@gmail.com`. Gmail addresses cannot be used as the From address.
 
 ```bash
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=Onyx Web Systems <onboarding@resend.dev>
+RESEND_FROM_EMAIL=Onyx Web Systems <hello@onyxwebsystems.co.za>
 ONYX_NOTIFY_EMAIL=onyxwebsystems@gmail.com
 ```
 
@@ -92,6 +92,8 @@ Used for:
 - `.ics` calendar invitations attached to consultation emails
 
 Until `RESEND_API_KEY` is set, emails are logged as simulated and not delivered.
+
+Fastest GoDaddy setup: in Resend → Domains → add `onyxwebsystems.co.za` → **Auto Configure**. Then create an API key under API Keys and set `RESEND_API_KEY` in Vercel.
 
 ---
 
@@ -123,7 +125,7 @@ Customers also receive an `.ics` invite and an “Add to Google Calendar” link
 
 - Meta Instagram / Facebook Messaging → until then Social stays **SIMULATED**
 - Google Calendar OAuth → Internal Calendar stays CONNECTED; Google is READY_FOR_INTEGRATION
-- Custom domain `onyxwebsystems.com` → point at Vercel
+- Custom domain `onyxwebsystems.co.za` → point at Vercel
 
 ---
 

@@ -1,5 +1,5 @@
 import { addMinutes } from "date-fns";
-import { brandedEmailHtml, brandedEmailText, formatWhen } from "./brand";
+import { brandedEmailHtml, brandedEmailText, emailCta, formatWhen } from "./brand";
 import { sendBrandedEmail } from "./resend";
 import { buildCalendarInvite, googleCalendarTemplateUrl } from "@/server/calendar/ics";
 import { createOnyxCalendarEvent } from "@/server/calendar/google";
@@ -54,8 +54,8 @@ export async function notifyConsultationBooked(input: {
     attendeeName: input.customerName,
   });
   const calendarLink = googleCalendarTemplateUrl({ title, details: description, startsAt: input.startsAt, endsAt });
-  const extraHtml = `<p style="margin:24px 0 0;font-size:15px;line-height:1.6;"><a href="${calendarLink}" style="color:#0a0a0a;font-weight:700;">Add this consultation to Google Calendar</a></p>
-    <p style="margin:8px 0 0;font-size:13px;color:#5c5c5c;">A calendar invitation is also attached to this email.</p>`;
+  const extraHtml = `${emailCta(calendarLink, "Add to Google Calendar")}
+    <p style="margin:16px 0 0;font-size:13px;line-height:1.7;color:#7a7a76;">A calendar invitation is also attached to this email.</p>`;
 
   const customerFields = [
     { label: "Meeting", value: input.serviceName },
@@ -226,8 +226,7 @@ export async function notifyConsultationRequested(input: {
     { label: "Meeting", value: input.serviceName },
     { label: "Company", value: input.company },
   ];
-  const scheduleButton = `<p style="margin:24px 0 0;"><a href="${input.scheduleUrl}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;padding:12px 20px;font-size:14px;font-weight:700;">Choose a consultation time</a></p>
-    <p style="margin:12px 0 0;font-size:13px;color:#5c5c5c;">If the button does not work, open this link:<br /><a href="${input.scheduleUrl}" style="color:#0a0a0a;">${input.scheduleUrl}</a></p>`;
+  const scheduleButton = emailCta(input.scheduleUrl, "Choose a consultation time");
 
   await sendBrandedEmail({
     to: input.customerEmail,

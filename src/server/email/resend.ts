@@ -1,5 +1,5 @@
 import { logger } from "@/server/logger";
-import { BRAND_FROM, BRAND_REPLY_TO, loadEmailLogo } from "./brand";
+import { BRAND_FROM, BRAND_REPLY_TO, loadEmailAssets } from "./brand";
 
 export type EmailAttachment = {
   filename: string;
@@ -40,7 +40,7 @@ async function postResendEmail(input: {
       attachments: input.attachments.map((file) => ({
         filename: file.filename,
         content: file.content,
-        ...(file.contentId ? { content_id: file.contentId } : {}),
+        ...(file.contentId ? { content_id: file.contentId, content_disposition: "inline" } : {}),
         ...(file.contentType ? { content_type: file.contentType } : {}),
       })),
     }),
@@ -69,11 +69,8 @@ export async function sendBrandedEmail(input: {
 }) {
   const key = process.env.RESEND_API_KEY;
   const to = Array.isArray(input.to) ? input.to : [input.to];
-  const logo = await loadEmailLogo();
-  const attachments = [
-    ...(logo ? [{ filename: logo.filename, content: logo.content, contentId: logo.contentId }] : []),
-    ...(input.attachments ?? []),
-  ];
+  const logos = await loadEmailAssets();
+  const attachments = [...logos, ...(input.attachments ?? [])];
 
   if (!key) {
     logger.info("Resend not connected — email simulated", { to, subject: input.subject });
