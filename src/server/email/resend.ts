@@ -1,5 +1,5 @@
 import { logger } from "@/server/logger";
-import { BRAND_FROM, BRAND_REPLY_TO, loadEmailAssets } from "./brand";
+import { BRAND_FROM, BRAND_REPLY_TO } from "./brand";
 
 export type EmailAttachment = {
   filename: string;
@@ -7,8 +7,6 @@ export type EmailAttachment = {
   contentId?: string;
   contentType?: string;
 };
-
-const RESEND_TEST_FROM = "Onyx Web Systems <onboarding@resend.dev>";
 
 function errorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -69,54 +67,23 @@ export async function sendBrandedEmail(input: {
 }) {
   const key = process.env.RESEND_API_KEY;
   const to = Array.isArray(input.to) ? input.to : [input.to];
-  const logos = await loadEmailAssets();
-  const attachments = [...logos, ...(input.attachments ?? [])];
+  const attachments = input.attachments ?? [];
 
   if (!key) {
     logger.info("Resend not connected — email simulated", { to, subject: input.subject });
     return { ok: true, simulated: true as const };
   }
 
-  const from = BRAND_FROM;
-  try {
-    return await postResendEmail({ from, to, subject: input.subject, html: input.html, text: input.text, attachments, key });
-  } catch (error) {
-    const status = (error as Error & { status?: number }).status;
-    const body = (error as Error & { body?: string }).body ?? "";
-    const unverified = status === 403 || /not verified|invalid `from`/i.test(body);
-    const testRecipientOnly = status === 403 && /only send testing emails/i.test(body);
-    const accountInbox = BRAND_REPLY_TO;
-
-    if (testRecipientOnly && !to.map((addr) => addr.toLowerCase()).includes(accountInbox.toLowerCase())) {
-      logger.warn("Resend test mode — sending to the account inbox instead", {
-        subject: input.subject,
-        originalTo: to,
-        accountInbox,
-      });
-      return postResendEmail({
-        from,
-        to: [accountInbox],
-        subject: input.subject,
-        html: input.html,
-        text: input.text,
-        attachments,
-        key,
-      });
-    }
-
-    if (unverified && !from.includes("onboarding@resend.dev")) {
-      logger.warn("Retrying email with Resend test sender", { subject: input.subject });
-      return postResendEmail({
-        from: RESEND_TEST_FROM,
-        to,
-        subject: input.subject,
-        html: input.html,
-        text: input.text,
-        attachments,
-        key,
-      });
-    }
+  return postResendEmail({
+    from: BRAND_FROM,
+    to,
+    subject: input.subject,
+    html: input.html,
+    text: input.text,
+    attachments,
+    key,
+  }).catch((error) => {
     logger.error("Resend send failed", { error: errorMessage(error), subject: input.subject });
     throw error;
-  }
+  });
 }

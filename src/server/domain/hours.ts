@@ -1,21 +1,22 @@
+import { BUSINESS_TIMEZONE, toZonedParts, parseHm } from "@/lib/timezones";
+
 type DayHours = { open: string; close: string } | null;
 
 export function isBusinessOpen(
   businessHours: Record<string, DayHours>,
   at: Date = new Date(),
+  timeZone = BUSINESS_TIMEZONE,
 ): boolean {
-  // America/Phoenix UTC-7
-  const utc = at.getTime() + at.getTimezoneOffset() * 60_000;
-  const phoenix = new Date(utc - 7 * 60 * 60_000);
+  const parts = toZonedParts(at, timeZone);
   const dayNames = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-  const day = dayNames[phoenix.getUTCDay()];
+  const day = dayNames[parts.dow];
   const hours = businessHours[day];
   if (!hours) return false;
 
-  const [oh, om] = hours.open.split(":").map(Number);
-  const [ch, cm] = hours.close.split(":").map(Number);
-  const mins = phoenix.getUTCHours() * 60 + phoenix.getUTCMinutes();
-  const openMins = oh * 60 + om;
-  const closeMins = ch * 60 + cm;
+  const open = parseHm(hours.open);
+  const close = parseHm(hours.close);
+  const mins = parts.hours * 60 + parts.minutes;
+  const openMins = open.h * 60 + open.m;
+  const closeMins = close.h * 60 + close.m;
   return mins >= openMins && mins < closeMins;
 }

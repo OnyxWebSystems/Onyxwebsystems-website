@@ -604,7 +604,7 @@ async function offerBooking(ctx: FlowCtx, nlu: Pick<NluResult, "serviceHint" | "
   const lines = pending
     .map(
       (slot, i) =>
-        `${i + 1}) ${new Date(slot.startsAt).toLocaleString("en-US", { timeZone: "America/Phoenix" })} with ${slot.employeeName}`,
+        `${i + 1}) ${new Date(slot.startsAt).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })} with ${slot.employeeName}`,
     )
     .join("\n");
   const draft = `I can book a ${service.name}. Reply yes or 1 to take the first time, or 2 for the second:\n${lines}\n\n${frontDeskLine()}`;
@@ -644,7 +644,7 @@ async function completePendingBooking(ctx: FlowCtx, slot: PendingSlot): Promise<
   const hoursNote = ctx.afterHours
     ? " Our office is closed right now, but I've booked this for you and notified the team."
     : "";
-  const reply = `Thanks${isPlaceholderName(ctx.customer.firstName, ctx.customer.lastName) ? "" : ` ${ctx.customer.firstName}`}. I've booked ${slot.serviceName} for ${new Date(slot.startsAt).toLocaleString("en-US", { timeZone: "America/Phoenix" })} with ${slot.employeeName}. A confirmation has been sent.${hoursNote}`;
+  const reply = `Thanks${isPlaceholderName(ctx.customer.firstName, ctx.customer.lastName) ? "" : ` ${ctx.customer.firstName}`}. I've booked ${slot.serviceName} for ${new Date(slot.startsAt).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })} with ${slot.employeeName}. A confirmation has been sent.${hoursNote}`;
 
   await prisma.conversation.update({
     where: { id: ctx.conversationId },
@@ -775,7 +775,7 @@ async function handleReschedule(ctx: FlowCtx, nlu: NluResult): Promise<ProcessRe
   }
 
   const updated = await rescheduleAppointment(upcoming.id, slot.startsAt, slot.employeeId);
-  const reply = `I've moved your ${upcoming.service.name} appointment to ${slot.startsAt.toLocaleString("en-US", { timeZone: "America/Phoenix" })}. A confirmation has been sent.`;
+  const reply = `I've moved your ${upcoming.service.name} appointment to ${slot.startsAt.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}. A confirmation has been sent.`;
   await prisma.message.create({
     data: { conversationId: ctx.conversationId, direction: "outbound", senderType: "system", body: reply },
   });

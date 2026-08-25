@@ -76,7 +76,7 @@ model Organization {
   email        String?
   website      String?
   whatsapp     String?
-  timezone     String   @default("America/Phoenix")
+  timezone     String   @default("Africa/Johannesburg")
   businessHours Json
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -95,6 +95,7 @@ model Organization {
   urgencyRules  UrgencyRule[]
   integrations  Integration[]
   holidays      Holiday[]
+  availabilityOverrides AvailabilityOverride[]
   activityEvents ActivityEvent[]
   followUps     FollowUp[]
   demoRuns      DemoRun[]
@@ -225,6 +226,20 @@ model Holiday {
   date           DateTime @db.Date
 }
 
+model AvailabilityOverride {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  date           DateTime @db.Date
+  isClosed       Boolean  @default(false)
+  startTime      String?
+  endTime        String?
+  note           String?
+
+  @@unique([organizationId, date])
+  @@index([organizationId])
+}
+
 model AvailabilityRule {
   id         String   @id @default(cuid())
   employeeId String
@@ -256,6 +271,8 @@ model Appointment {
   urgency        String   @default("NORMAL")
   notes          String?
   confirmationSent Boolean @default(false)
+  guestTimeZone  String?
+  remindersSent  Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

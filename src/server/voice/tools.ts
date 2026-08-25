@@ -85,7 +85,7 @@ export async function executeVoiceTool(call: VoiceToolCall): Promise<unknown> {
         serviceSlug: service.slug,
         slots: slots.slice(0, 6).map((s) => ({
           startsAt: s.startsAt.toISOString(),
-          label: s.startsAt.toLocaleString("en-US", { timeZone: "America/Phoenix" }),
+          label: s.startsAt.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }),
           employeeName: s.employeeName,
           employeeId: s.employeeId,
         })),
@@ -196,7 +196,7 @@ export async function executeVoiceTool(call: VoiceToolCall): Promise<unknown> {
         appointmentId: appointment.id,
         service: service.name,
         startsAt: appointment.startsAt.toISOString(),
-        label: appointment.startsAt.toLocaleString("en-US", { timeZone: "America/Phoenix" }),
+        label: appointment.startsAt.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }),
         technician: appointment.employee?.name,
       };
     }

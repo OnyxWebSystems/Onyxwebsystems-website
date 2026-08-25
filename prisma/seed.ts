@@ -38,6 +38,7 @@ async function main() {
   await prisma.urgencyRule.deleteMany();
   await prisma.integration.deleteMany();
   await prisma.holiday.deleteMany();
+  await prisma.availabilityOverride.deleteMany();
   await prisma.serviceArea.deleteMany();
   await prisma.service.deleteMany();
   await prisma.employee.deleteMany();
@@ -77,7 +78,7 @@ async function main() {
       email: "onyxwebsystems@gmail.com",
       website: "https://onyxwebsystems.com",
       whatsapp: process.env.TWILIO_WHATSAPP_FROM ?? "+10000000000",
-      timezone: "America/Phoenix",
+      timezone: "Africa/Johannesburg",
       businessHours: BUSINESS_HOURS,
     },
   });
@@ -357,7 +358,7 @@ async function main() {
       slug: "hours",
       keywords: ["hours", "open", "closed"],
       content:
-        "Consultations are typically scheduled Monday–Friday 9:00 AM–5:00 PM (America/Phoenix). The digital front desk answers after hours, captures leads, and books the next available consultation.",
+        "Consultations are typically scheduled Monday–Friday 9:00 AM–5:00 PM (Africa/Johannesburg). The digital front desk answers after hours, captures leads, and books the next available consultation.",
     },
     {
       category: "consultation",

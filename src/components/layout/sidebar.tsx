@@ -12,7 +12,6 @@ import {
   Settings,
   Activity,
   LogOut,
-  Kanban,
   BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,7 +21,7 @@ import { OnyxLogo } from "@/components/brand/onyx-logo";
 const links = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/conversations", label: "Conversations", icon: MessagesSquare },
-  { href: "/dashboard/pipeline", label: "Pipeline", icon: Kanban },
+  { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
   { href: "/dashboard/appointments", label: "Appointments", icon: CalendarDays },
   { href: "/dashboard/tickets", label: "Tickets", icon: Ticket },

@@ -1,9 +1,8 @@
-import { addMinutes, areIntervalsOverlapping, format } from "date-fns";
+import { addMinutes, areIntervalsOverlapping } from "date-fns";
 import { prisma } from "@/server/db";
 import { logger } from "@/server/logger";
-
-/** America/Phoenix is UTC-7 year-round (no DST). */
-const PHOENIX_OFFSET_MIN = -7 * 60;
+import { parseHm, toZonedParts, zonedLocalToUtc } from "@/server/calendar/timezone";
+import { ensureBusinessTimezone } from "@/server/calendar/org-timezone";
 
 export type Slot = {
   startsAt: Date;
@@ -11,30 +10,6 @@ export type Slot = {
   employeeId: string;
   employeeName: string;
 };
-
-function toPhoenixParts(date: Date) {
-  const utc = date.getTime() + date.getTimezoneOffset() * 60_000;
-  const phoenix = new Date(utc + PHOENIX_OFFSET_MIN * 60_000);
-  return {
-    y: phoenix.getFullYear(),
-    m: phoenix.getMonth(),
-    d: phoenix.getDate(),
-    dow: phoenix.getDay(),
-    hours: phoenix.getHours(),
-    minutes: phoenix.getMinutes(),
-  };
-}
-
-function phoenixLocalToUtc(y: number, m: number, d: number, hours: number, minutes: number) {
-  // Construct as if local wall time in Phoenix, convert to UTC
-  const asUtc = Date.UTC(y, m, d, hours, minutes, 0) - PHOENIX_OFFSET_MIN * 60_000;
-  return new Date(asUtc);
-}
-
-function parseHm(hm: string) {
-  const [h, m] = hm.split(":").map(Number);
-  return { h, m };
-}
 
 export async function getOrganizationHours(organizationId: string) {
   const org = await prisma.organization.findUniqueOrThrow({ where: { id: organizationId } });
@@ -52,7 +27,9 @@ export async function listAvailableSlots(input: {
   const duration = service.durationMin + service.bufferMin;
   const travel = service.travelBufferMin;
   const days = input.days ?? 5;
-  const hours = await getOrganizationHours(input.organizationId);
+  const org = await prisma.organization.findUniqueOrThrow({ where: { id: input.organizationId } });
+  const timeZone = await ensureBusinessTimezone(org.id, org.timezone);
+  const hours = org.businessHours as Record<string, { open: string; close: string } | null>;
 
   const techs = await prisma.employee.findMany({
     where: {
@@ -68,7 +45,11 @@ export async function listAvailableSlots(input: {
   const holidays = await prisma.holiday.findMany({
     where: { organizationId: input.organizationId },
   });
-  const holidayKeys = new Set(holidays.map((h) => format(h.date, "yyyy-MM-dd")));
+  const holidayKeys = new Set(holidays.map((h) => h.date.toISOString().slice(0, 10)));
+  const overrides = await prisma.availabilityOverride.findMany({
+    where: { organizationId: input.organizationId },
+  });
+  const overrideByDate = new Map(overrides.map((row) => [row.date.toISOString().slice(0, 10), row]));
 
   const windowEnd = addMinutes(input.from, days * 24 * 60);
   const existing = await prisma.appointment.findMany({
@@ -81,7 +62,7 @@ export async function listAvailableSlots(input: {
   });
 
   const slots: Slot[] = [];
-  const startParts = toPhoenixParts(input.from);
+  const startParts = toZonedParts(input.from, timeZone);
 
   for (let d = 0; d < days; d++) {
     const dayDate = new Date(Date.UTC(startParts.y, startParts.m, startParts.d + d));
@@ -90,22 +71,26 @@ export async function listAvailableSlots(input: {
     const day = dayDate.getUTCDate();
     const dow = new Date(Date.UTC(y, m, day)).getUTCDay();
     const dayKey = `${y}-${String(m + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    if (holidayKeys.has(dayKey) && !input.emergency) continue;
+    const override = overrideByDate.get(dayKey);
+    if (override?.isClosed && !input.emergency) continue;
+    if (holidayKeys.has(dayKey) && !override && !input.emergency) continue;
 
     const dayNames = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
     const orgDay = hours[dayNames[dow]];
-    if (!orgDay && !input.emergency) continue;
+    if (!orgDay && !override && !input.emergency) continue;
 
     for (const tech of techs) {
       const rules = tech.availability.filter((r) => r.dayOfWeek === dow && r.isActive);
       const windows =
-        rules.length > 0
-          ? rules.map((r) => ({ startTime: r.startTime, endTime: r.endTime }))
-          : orgDay
-            ? [{ startTime: orgDay.open, endTime: orgDay.close }]
-            : input.emergency
-              ? [{ startTime: "08:00", endTime: "20:00" }]
-              : [];
+        override?.startTime && override?.endTime
+          ? [{ startTime: override.startTime, endTime: override.endTime }]
+          : rules.length > 0
+            ? rules.map((r) => ({ startTime: r.startTime, endTime: r.endTime }))
+            : orgDay
+              ? [{ startTime: orgDay.open, endTime: orgDay.close }]
+              : input.emergency
+                ? [{ startTime: "08:00", endTime: "20:00" }]
+                : [];
 
       for (const win of windows) {
         const { h: sh, m: sm } = parseHm(win.startTime);
@@ -116,7 +101,7 @@ export async function listAvailableSlots(input: {
         while (cursorMin + duration <= endMin) {
           const hh = Math.floor(cursorMin / 60);
           const mm = cursorMin % 60;
-          const startsAt = phoenixLocalToUtc(y, m, day, hh, mm);
+          const startsAt = zonedLocalToUtc(y, m, day, hh, mm, timeZone);
           const endsAt = addMinutes(startsAt, service.durationMin);
           const blockEnd = addMinutes(endsAt, service.bufferMin + travel);
 
@@ -160,13 +145,14 @@ export async function bookAppointment(input: {
   addressLine1?: string;
   city?: string;
   postalCode?: string;
+  guestTimeZone?: string | null;
 }) {
   const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
   const endsAt = addMinutes(input.startsAt, service.durationMin);
 
   const conflict = await prisma.appointment.findFirst({
     where: {
-      employeeId: input.employeeId,
+      organizationId: input.organizationId,
       status: { notIn: ["cancelled", "no_show"] },
       startsAt: { lt: addMinutes(endsAt, service.bufferMin) },
       endsAt: { gt: addMinutes(input.startsAt, -service.travelBufferMin) },
@@ -191,6 +177,8 @@ export async function bookAppointment(input: {
       city: input.city,
       postalCode: input.postalCode,
       confirmationSent: true,
+      guestTimeZone: input.guestTimeZone ?? null,
+      remindersSent: {},
     },
     include: { service: true, employee: true, customer: true },
   });
@@ -216,6 +204,7 @@ export async function rescheduleAppointment(appointmentId: string, startsAt: Dat
       employeeId: techId,
       status: "confirmed",
       confirmationSent: true,
+      remindersSent: {},
     },
     include: { service: true, employee: true, customer: true },
   });

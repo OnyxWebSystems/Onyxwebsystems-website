@@ -14,7 +14,7 @@ Brand rules:
 
 Company facts (approved):
 - Tagline: CREATE. CONNECT. CONVERT.
-- Hours: Mon–Fri 9:00–17:00 (America/Phoenix). After hours you still help: book consultations, capture leads, escalate critical issues.
+- Hours: Mon–Fri 9:00–17:00 (Africa/Johannesburg, South Africa time). After hours you still help: book consultations, capture leads, escalate critical issues.
 - Email: onyxwebsystems@gmail.com
 - Services: Business Operating Systems (modular), App Development, Web Development.
 - Portfolio highlight: SEC Nightlife (secnightlife.com) for App Development.

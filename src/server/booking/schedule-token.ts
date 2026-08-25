@@ -14,6 +14,12 @@ export type SchedulePayload = {
   exp: number;
 };
 
+export type ReschedulePayload = {
+  appointmentId: string;
+  email: string;
+  exp: number;
+};
+
 function secret() {
   return process.env.BETTER_AUTH_SECRET || "onyx-schedule-secret";
 }
@@ -42,6 +48,31 @@ export function verifyScheduleToken(token: string): SchedulePayload | null {
   try {
     const payload = JSON.parse(Buffer.from(json, "base64url").toString("utf8")) as SchedulePayload;
     if (!payload.email || !payload.name || payload.exp < Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export function signRescheduleToken(payload: Omit<ReschedulePayload, "exp">) {
+  const body: ReschedulePayload = {
+    ...payload,
+    exp: Date.now() + 30 * 24 * 60 * 60 * 1000,
+  };
+  const json = Buffer.from(JSON.stringify(body), "utf8").toString("base64url");
+  return `${json}.${sign(json)}`;
+}
+
+export function verifyRescheduleToken(token: string): ReschedulePayload | null {
+  const [json, sig] = token.split(".");
+  if (!json || !sig) return null;
+  const expected = sign(json);
+  const left = Buffer.from(sig);
+  const right = Buffer.from(expected);
+  if (left.length !== right.length || !timingSafeEqual(left, right)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(json, "base64url").toString("utf8")) as ReschedulePayload;
+    if (!payload.appointmentId || !payload.email || payload.exp < Date.now()) return null;
     return payload;
   } catch {
     return null;

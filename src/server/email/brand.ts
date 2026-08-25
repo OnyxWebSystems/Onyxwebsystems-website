@@ -1,51 +1,39 @@
-import { readFile } from "fs/promises";
-import path from "path";
-
-export type EmailInlineImage = {
-  filename: string;
-  content: string;
-  contentId: string;
-  contentType: string;
-};
-
 export const BRAND_FROM =
-  process.env.RESEND_FROM_EMAIL ?? "Onyx Web Systems <hello@onyxwebsystems.co.za>";
+  process.env.RESEND_FROM_EMAIL ?? "Onyx Web Systems <noreply@onyxwebsystems.co.za>";
 export const BRAND_REPLY_TO = process.env.ONYX_NOTIFY_EMAIL ?? "onyxwebsystems@gmail.com";
-export const BRAND_TIMEZONE = "America/Phoenix";
+export const BRAND_TIMEZONE = "Africa/Johannesburg";
 
 export function publicSiteUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL || process.env.PUBLIC_APP_URL || "https://onyxwebsystems.co.za").replace(
-    /\/$/,
-    "",
-  );
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.PUBLIC_APP_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    "https://onyxwebsystems.co.za",
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.replace(/\/$/, ""));
+  return candidates.find((value) => !value.includes("vercel.app")) ?? candidates[0];
 }
 
-export async function loadEmailAssets(): Promise<EmailInlineImage[]> {
-  const files = [
-    { file: "onyx-email-mark.png", filename: "onyxwebsystems-mark.png", contentId: "onyx-mark" },
-    { file: "onyx-email-wordmark.png", filename: "onyxwebsystems-wordmark.png", contentId: "onyx-wordmark" },
-  ];
-  const loaded: EmailInlineImage[] = [];
-  for (const item of files) {
-    try {
-      const filePath = path.join(process.cwd(), "public", "brand", item.file);
-      const buf = await readFile(filePath);
-      loaded.push({
-        filename: item.filename,
-        content: buf.toString("base64"),
-        contentId: item.contentId,
-        contentType: "image/png",
-      });
-    } catch {
-      /* skip missing asset */
-    }
-  }
-  return loaded;
+export function dashboardSiteUrl() {
+  return (
+    process.env.NEXT_PUBLIC_DASHBOARD_URL ||
+    process.env.BETTER_AUTH_URL ||
+    "https://dashboard.onyxwebsystems.co.za"
+  ).replace(/\/$/, "");
 }
 
-export function formatWhen(date: Date) {
-  return date.toLocaleString("en-US", {
-    timeZone: BRAND_TIMEZONE,
+export function emailLogoUrl() {
+  return `${publicSiteUrl()}/brand/onyx-email-mark.png`;
+}
+
+export function emailWordmarkUrl() {
+  return `${publicSiteUrl()}/brand/onyx-email-wordmark.png`;
+}
+
+export function formatWhen(date: Date, timeZone = BRAND_TIMEZONE) {
+  return date.toLocaleString("en-ZA", {
+    timeZone,
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -53,6 +41,16 @@ export function formatWhen(date: Date) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+export function formatWhenForGuest(date: Date, guestTimeZone?: string | null) {
+  const sast = `${formatWhen(date, BRAND_TIMEZONE)} (South Africa time)`;
+  if (!guestTimeZone || guestTimeZone === BRAND_TIMEZONE) return sast;
+  try {
+    return `${formatWhen(date, guestTimeZone)} (${guestTimeZone.replace(/_/g, " ")}) · ${sast}`;
+  } catch {
+    return sast;
+  }
 }
 
 function escapeHtml(value: string) {
@@ -78,8 +76,7 @@ export function emailCta(href: string, label: string) {
         <a href="${escapeHtml(href)}" style="display:inline-block;padding:16px 28px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;text-decoration:none;color:#ffffff;font-weight:700;">${escapeHtml(label)}</a>
       </td>
     </tr>
-  </table>
-  <p style="margin:0;font-size:12px;line-height:1.7;color:#7a7a76;">If the button does not open, use this link:<br /><a href="${escapeHtml(href)}" style="color:#0a0a0a;text-decoration:underline;">${escapeHtml(href)}</a></p>`;
+  </table>`;
 }
 
 export function brandedEmailHtml(input: {
@@ -95,6 +92,8 @@ export function brandedEmailHtml(input: {
     input.closing ??
     "If you have any questions, reply to this email or write to onyxwebsystems@gmail.com.";
   const site = publicSiteUrl();
+  const logo = emailLogoUrl();
+  const wordmark = emailWordmarkUrl();
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -110,8 +109,9 @@ export function brandedEmailHtml(input: {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;">
           <tr>
             <td align="center" style="padding:48px 40px 32px;border-bottom:1px solid #0a0a0a;">
-              <img src="cid:onyx-mark" alt="ONYXWEBSYSTEMS" width="196" style="display:block;margin:0 auto;width:196px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
-              <p style="margin:22px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.32em;text-transform:uppercase;color:#7a7a76;">Create. Connect. Convert.</p>
+              <a href="${escapeHtml(logo)}" download="onyxweb-systems.png" style="display:inline-block;text-decoration:none;">
+                <img src="${escapeHtml(logo)}" alt="ONYXWEB SYSTEMS — Create. Connect. Convert." width="220" style="display:block;margin:0 auto;width:220px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
+              </a>
             </td>
           </tr>
           <tr>
@@ -148,7 +148,9 @@ export function brandedEmailHtml(input: {
           </tr>
           <tr>
             <td align="center" style="padding:36px 40px 44px;border-top:1px solid #ecece8;">
-              <img src="cid:onyx-wordmark" alt="ONYXWEBSYSTEMS" width="248" style="display:block;margin:0 auto 18px;width:248px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
+              <a href="${escapeHtml(wordmark)}" download="onyxweb-systems-wordmark.png" style="display:inline-block;text-decoration:none;">
+                <img src="${escapeHtml(wordmark)}" alt="ONYXWEBSYSTEMS" width="248" style="display:block;margin:0 auto 18px;width:248px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
+              </a>
               <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.08em;line-height:1.7;color:#7a7a76;">
                 Technology partner for operators who want systems that create, connect, and convert.
               </p>

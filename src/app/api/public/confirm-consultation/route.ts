@@ -3,16 +3,18 @@ import { addMinutes } from "date-fns";
 import { z } from "zod";
 import { prisma } from "@/server/db";
 import { verifyScheduleToken } from "@/server/booking/schedule-token";
-import { CONSULTATION_MINUTES, googleSlotIsBookable } from "@/server/calendar/slots";
+import { CONSULTATION_MINUTES, consultationSlotIsBookable } from "@/server/calendar/slots";
 import { notifyConsultationBooked } from "@/server/email/notifications";
 import { addTimelineEvent } from "@/server/domain/customers";
 import { publishActivity } from "@/server/events";
+import { getDemoOrganization } from "@/server/demo/runner";
 import { rateLimit } from "@/server/security/rate-limit";
 import { logger } from "@/server/logger";
 
 const schema = z.object({
   token: z.string().min(20),
   startsAt: z.string().min(1),
+  timeZone: z.string().min(1).max(80).optional().nullable(),
 });
 
 export async function POST(req: Request) {
@@ -36,7 +38,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid time slot." }, { status: 400 });
   }
 
-  const open = await googleSlotIsBookable(startsAt);
+  const org = payload.organizationId
+    ? await prisma.organization.findUnique({ where: { id: payload.organizationId } })
+    : await getDemoOrganization();
+  if (!org) return NextResponse.json({ error: "Organization missing." }, { status: 400 });
+
+  const open = await consultationSlotIsBookable(org.id, startsAt);
   if (!open) {
     return NextResponse.json(
       { error: "That time is no longer available. Please choose another slot." },
@@ -56,15 +63,14 @@ export async function POST(req: Request) {
 
   let appointmentId: string | undefined;
   try {
-    if (payload.organizationId && payload.customerId) {
+    if (payload.customerId) {
       const service =
         (await prisma.service.findFirst({
-          where: { organizationId: payload.organizationId, slug: "consultation" },
-        })) ??
-        (await prisma.service.findFirst({ where: { organizationId: payload.organizationId } }));
+          where: { organizationId: org.id, slug: "consultation" },
+        })) ?? (await prisma.service.findFirst({ where: { organizationId: org.id } }));
       const employee = await prisma.employee.findFirst({
         where: {
-          organizationId: payload.organizationId,
+          organizationId: org.id,
           isActive: true,
           role: { in: ["consultant", "sales", "scheduler", "manager", "owner"] },
         },
@@ -72,7 +78,7 @@ export async function POST(req: Request) {
       if (service) {
         const appointment = await prisma.appointment.create({
           data: {
-            organizationId: payload.organizationId,
+            organizationId: org.id,
             customerId: payload.customerId,
             serviceId: service.id,
             employeeId: employee?.id,
@@ -81,6 +87,8 @@ export async function POST(req: Request) {
             status: "confirmed",
             notes: details,
             confirmationSent: true,
+            guestTimeZone: body.timeZone,
+            remindersSent: {},
           },
         });
         appointmentId = appointment.id;
@@ -100,7 +108,7 @@ export async function POST(req: Request) {
           });
         }
         await publishActivity({
-          organizationId: payload.organizationId,
+          organizationId: org.id,
           type: "appointment",
           title: "Consultation scheduled",
           detail: `${payload.name} selected a calendar slot`,
@@ -127,7 +135,8 @@ export async function POST(req: Request) {
       endsAt,
       details,
       appointmentId,
-      organizationId: payload.organizationId,
+      organizationId: org.id,
+      guestTimeZone: body.timeZone,
     });
   } catch (err) {
     logger.warn("Consultation confirmation email failed", { err });

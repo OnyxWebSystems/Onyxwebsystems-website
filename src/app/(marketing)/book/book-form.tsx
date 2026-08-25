@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { SlotPicker } from "@/components/booking/slot-picker";
+import { BUSINESS_TIMEZONE, formatInTimeZone } from "@/lib/timezones";
 
 const BOS_MODULES = [
   "Customer Experience / Front Desk",
@@ -24,7 +26,9 @@ export function BookConsultationForm() {
   const [modules, setModules] = useState<string[]>(["Customer Experience / Front Desk"]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ email: string; scheduleUrl?: string } | null>(null);
+  const [startsAt, setStartsAt] = useState("");
+  const [timeZone, setTimeZone] = useState(BUSINESS_TIMEZONE);
+  const [done, setDone] = useState<{ email: string; when: string } | null>(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -39,6 +43,10 @@ export function BookConsultationForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!startsAt) {
+      setError("Please choose a date and time before requesting a consultation.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -49,11 +57,16 @@ export function BookConsultationForm() {
           ...form,
           serviceInterest,
           modules: serviceInterest === "bos" ? modules : [],
+          startsAt,
+          timeZone,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Booking failed");
-      setDone({ email: form.email, scheduleUrl: data.scheduleUrl });
+      setDone({
+        email: form.email,
+        when: formatInTimeZone(new Date(startsAt), timeZone),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Booking failed");
     } finally {
@@ -64,17 +77,12 @@ export function BookConsultationForm() {
   if (done) {
     return (
       <div className="border border-black p-8">
-        <p className="text-sm uppercase tracking-[0.16em] text-[#5c5c5c]">Request received</p>
+        <p className="text-sm uppercase tracking-[0.16em] text-[#5c5c5c]">Consultation booked</p>
         <h2 className="mt-3 text-2xl font-semibold">Check your email</h2>
         <p className="mt-3 text-sm text-[#5c5c5c]">
-          We sent a confirmation to <span className="text-black">onyxwebsystems@gmail.com</span> (Resend test
-          mode can only deliver to that inbox until a domain is verified).
+          We sent a confirmation and calendar invitation to <span className="text-black">{done.email}</span>.
         </p>
-        {done.scheduleUrl ? (
-          <a href={done.scheduleUrl} className="ox-btn-solid mt-6 inline-block px-6 py-3 text-sm font-medium">
-            Choose a consultation time
-          </a>
-        ) : null}
+        <p className="mt-2 text-sm text-[#5c5c5c]">When: {done.when}</p>
         <button
           type="button"
           className="mt-6 border border-black px-4 py-2 text-sm"
@@ -164,9 +172,20 @@ export function BookConsultationForm() {
         />
       </label>
 
+      <SlotPicker
+        value={startsAt}
+        timeZone={timeZone}
+        onChange={(next) => setStartsAt(next)}
+        onTimeZoneChange={setTimeZone}
+      />
+
       {error ? <p className="text-sm text-[#8b1538]">{error}</p> : null}
 
-      <button type="submit" disabled={submitting} className="ox-btn-solid px-6 py-3 text-sm font-medium disabled:opacity-50">
+      <button
+        type="submit"
+        disabled={submitting || !startsAt}
+        className="ox-btn-solid px-6 py-3 text-sm font-medium disabled:opacity-50"
+      >
         {submitting ? "Sending…" : "Request consultation"}
       </button>
     </form>

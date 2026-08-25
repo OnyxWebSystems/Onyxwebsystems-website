@@ -1,12 +1,14 @@
 import { addMinutes } from "date-fns";
-import { brandedEmailHtml, brandedEmailText, emailCta, formatWhen } from "./brand";
+import { brandedEmailHtml, brandedEmailText, emailCta, formatWhenForGuest, publicSiteUrl } from "./brand";
 import { sendBrandedEmail } from "./resend";
 import { buildCalendarInvite, googleCalendarTemplateUrl } from "@/server/calendar/ics";
 import { createOnyxCalendarEvent } from "@/server/calendar/google";
+import { canRescheduleMeeting } from "@/server/calendar/timezone";
+import { signRescheduleToken } from "@/server/booking/schedule-token";
 import { logger } from "@/server/logger";
 
 function teamInbox() {
-  return process.env.ONYX_NOTIFY_EMAIL || process.env.RESEND_FROM_EMAIL?.match(/<([^>]+)>/)?.[1] || "onyxwebsystems@gmail.com";
+  return process.env.ONYX_NOTIFY_EMAIL || "onyxwebsystems@gmail.com";
 }
 
 function icsAttachment(ics: string) {
@@ -15,6 +17,27 @@ function icsAttachment(ics: string) {
     content: Buffer.from(ics, "utf8").toString("base64"),
     contentType: "text/calendar; charset=utf-8; method=REQUEST",
   };
+}
+
+function rescheduleUrl(appointmentId: string, email: string) {
+  const token = signRescheduleToken({ appointmentId, email });
+  return `${publicSiteUrl()}/book/reschedule?token=${encodeURIComponent(token)}`;
+}
+
+function bookingActionsHtml(input: {
+  calendarLink: string;
+  appointmentId?: string;
+  customerEmail: string;
+  startsAt: Date;
+}) {
+  const parts = [emailCta(input.calendarLink, "Add to Google Calendar")];
+  if (input.appointmentId && canRescheduleMeeting(input.startsAt)) {
+    parts.push(emailCta(rescheduleUrl(input.appointmentId, input.customerEmail), "Reschedule this meeting"));
+  }
+  parts.push(
+    `<p style="margin:16px 0 0;font-size:13px;line-height:1.7;color:#7a7a76;">A calendar invitation is also attached to this email.</p>`,
+  );
+  return parts.join("");
 }
 
 export async function notifyConsultationBooked(input: {
@@ -29,9 +52,10 @@ export async function notifyConsultationBooked(input: {
   details?: string | null;
   appointmentId?: string;
   organizationId?: string;
+  guestTimeZone?: string | null;
 }) {
   const endsAt = input.endsAt ?? addMinutes(input.startsAt, 30);
-  const when = formatWhen(input.startsAt);
+  const when = formatWhenForGuest(input.startsAt, input.guestTimeZone);
   const title = `${input.serviceName} — ${input.customerName}`;
   const description = [
     `Consultation with Onyx Web Systems`,
@@ -54,12 +78,21 @@ export async function notifyConsultationBooked(input: {
     attendeeName: input.customerName,
   });
   const calendarLink = googleCalendarTemplateUrl({ title, details: description, startsAt: input.startsAt, endsAt });
-  const extraHtml = `${emailCta(calendarLink, "Add to Google Calendar")}
-    <p style="margin:16px 0 0;font-size:13px;line-height:1.7;color:#7a7a76;">A calendar invitation is also attached to this email.</p>`;
+  const extraHtml = bookingActionsHtml({
+    calendarLink,
+    appointmentId: input.appointmentId,
+    customerEmail: input.customerEmail,
+    startsAt: input.startsAt,
+  });
+
+  const rescheduleAllowed = Boolean(input.appointmentId && canRescheduleMeeting(input.startsAt));
+  const closing = rescheduleAllowed
+    ? "Please add the attached invitation to your calendar. You can reschedule from the button above until the day of the meeting."
+    : "Please add the attached invitation to your calendar. On the day of the meeting, this time is locked.";
 
   const customerFields = [
     { label: "Meeting", value: input.serviceName },
-    { label: "When", value: `${when} (Arizona time)` },
+    { label: "When", value: when },
     { label: "With", value: input.technicianName ? `${input.technicianName}, Onyx Web Systems` : "Onyx Web Systems" },
     { label: "Company", value: input.company },
   ];
@@ -70,14 +103,14 @@ export async function notifyConsultationBooked(input: {
     intro: `Dear ${input.customerName.split(" ")[0]}, thank you for booking a consultation with Onyx Web Systems. We look forward to understanding how your business operates and where a connected system can create the most value.`,
     fields: customerFields,
     extraHtml,
-    closing:
-      "Please add the attached invitation to your calendar. If you need to reschedule, reply to this email and we will find another time.",
+    closing,
   });
   const customerText = brandedEmailText({
     heading: "Your meeting with Onyx Web Systems is booked.",
     intro: `Dear ${input.customerName.split(" ")[0]}, thank you for booking a consultation with Onyx Web Systems.`,
     fields: customerFields,
     extra: `Add to Google Calendar: ${calendarLink}`,
+    closing,
   });
 
   const teamFields = [
@@ -85,16 +118,16 @@ export async function notifyConsultationBooked(input: {
     { label: "Email", value: input.customerEmail },
     { label: "Phone", value: input.customerPhone },
     { label: "Company", value: input.company },
-    { label: "When", value: `${when} (Arizona time)` },
+    { label: "When", value: when },
     { label: "Service", value: input.serviceName },
     { label: "Notes", value: input.details },
   ];
   const teamHtml = brandedEmailHtml({
     eyebrow: "New booking",
     heading: "A consultation has been booked.",
-    intro: `${input.customerName} scheduled a ${input.serviceName.toLowerCase()} with Onyx Web Systems. The meeting has been added to the Onyx calendar where Google is connected.`,
+    intro: `${input.customerName} scheduled a ${input.serviceName.toLowerCase()} with Onyx Web Systems.`,
     fields: teamFields,
-    extraHtml,
+    extraHtml: emailCta(calendarLink, "Open in Google Calendar"),
     closing: "Please review the notes before the call and confirm any follow-up materials.",
   });
   const teamText = brandedEmailText({
@@ -139,6 +172,82 @@ export async function notifyConsultationBooked(input: {
   const emailResult = results[0];
   if (emailResult.status === "fulfilled") return emailResult.value;
   throw emailResult.reason;
+}
+
+export async function notifyConsultationReminder(input: {
+  customerName: string;
+  customerEmail: string;
+  startsAt: Date;
+  endsAt: Date;
+  company?: string | null;
+  appointmentId: string;
+  guestTimeZone?: string | null;
+  kind: "5d" | "3d" | "1d" | "1h" | "15m";
+}) {
+  const when = formatWhenForGuest(input.startsAt, input.guestTimeZone);
+  const labels: Record<typeof input.kind, { subject: string; heading: string; intro: string }> = {
+    "5d": {
+      subject: "Your Onyx consultation is in 5 days",
+      heading: "A reminder: your consultation is in five days.",
+      intro: `Dear ${input.customerName.split(" ")[0]}, this is a reminder that your consultation with Onyx Web Systems is coming up.`,
+    },
+    "3d": {
+      subject: "Your Onyx consultation is in 3 days",
+      heading: "Your consultation is in three days.",
+      intro: `Dear ${input.customerName.split(" ")[0]}, we look forward to speaking with you in three days.`,
+    },
+    "1d": {
+      subject: "Your Onyx consultation is tomorrow",
+      heading: "Your consultation is tomorrow.",
+      intro: `Dear ${input.customerName.split(" ")[0]}, your consultation with Onyx Web Systems is tomorrow.`,
+    },
+    "1h": {
+      subject: "Your Onyx consultation starts in 1 hour",
+      heading: "Your consultation starts in one hour.",
+      intro: `Dear ${input.customerName.split(" ")[0]}, we will speak with you in one hour.`,
+    },
+    "15m": {
+      subject: "Your Onyx consultation starts in 15 minutes",
+      heading: "Your consultation starts in 15 minutes.",
+      intro: `Dear ${input.customerName.split(" ")[0]}, please join shortly — we start in 15 minutes.`,
+    },
+  };
+  const copy = labels[input.kind];
+  const calendarLink = googleCalendarTemplateUrl({
+    title: `Consultation — ${input.customerName}`,
+    details: "Consultation with Onyx Web Systems",
+    startsAt: input.startsAt,
+    endsAt: input.endsAt,
+  });
+  const extraHtml = bookingActionsHtml({
+    calendarLink,
+    appointmentId: input.appointmentId,
+    customerEmail: input.customerEmail,
+    startsAt: input.startsAt,
+  });
+
+  await sendBrandedEmail({
+    to: input.customerEmail,
+    subject: copy.subject,
+    html: brandedEmailHtml({
+      eyebrow: "Reminder",
+      heading: copy.heading,
+      intro: copy.intro,
+      fields: [
+        { label: "When", value: when },
+        { label: "Company", value: input.company },
+      ],
+      extraHtml,
+      closing: canRescheduleMeeting(input.startsAt)
+        ? "If you need a different time, use the reschedule button before the day of the meeting."
+        : "This meeting can no longer be rescheduled online. Reply to this email if you cannot attend.",
+    }),
+    text: brandedEmailText({
+      heading: copy.heading,
+      intro: copy.intro,
+      fields: [{ label: "When", value: when }],
+    }),
+  });
 }
 
 export async function notifyProjectRequest(input: {
@@ -210,91 +319,4 @@ export async function notifyProjectRequest(input: {
       text: teamText,
     }),
   ]);
-}
-
-export async function notifyConsultationRequested(input: {
-  customerName: string;
-  customerEmail: string;
-  customerPhone?: string | null;
-  company?: string | null;
-  serviceName: string;
-  details?: string | null;
-  scheduleUrl: string;
-}) {
-  const firstName = input.customerName.split(" ")[0];
-  const receivedFields = [
-    { label: "Meeting", value: input.serviceName },
-    { label: "Company", value: input.company },
-  ];
-  const scheduleButton = emailCta(input.scheduleUrl, "Choose a consultation time");
-
-  await sendBrandedEmail({
-    to: input.customerEmail,
-    subject: "We received your consultation request — Onyx Web Systems",
-    html: brandedEmailHtml({
-      eyebrow: "Request received",
-      heading: "Your consultation request is booked with our team.",
-      intro: `Dear ${firstName}, thank you for requesting a consultation with Onyx Web Systems. We have your details and will use them to prepare for the conversation.`,
-      fields: receivedFields,
-      closing:
-        "The next email contains a link to choose a date and time from our live calendar. No action is needed until then.",
-    }),
-    text: brandedEmailText({
-      heading: "Your consultation request is booked with our team.",
-      intro: `Dear ${firstName}, thank you for requesting a consultation with Onyx Web Systems.`,
-      fields: receivedFields,
-      closing: "The next email will let you choose a date and time.",
-    }),
-  });
-
-  await sendBrandedEmail({
-    to: input.customerEmail,
-    subject: "Choose your consultation time — Onyx Web Systems",
-    html: brandedEmailHtml({
-      eyebrow: "Schedule your meeting",
-      heading: "Pick a date and time that works for you.",
-      intro: `Dear ${firstName}, use the button below to choose a 30-minute consultation. The times shown are open on the Onyx Web Systems calendar.`,
-      fields: receivedFields,
-      extraHtml: scheduleButton,
-      closing: "After you select a slot, we will send a calendar invitation and add the meeting to Google Calendar.",
-    }),
-    text: brandedEmailText({
-      heading: "Pick a date and time that works for you.",
-      intro: `Dear ${firstName}, choose a 30-minute consultation from our open calendar.`,
-      fields: receivedFields,
-      extra: `Choose a time: ${input.scheduleUrl}`,
-      closing: "After you select a slot, we will send a calendar invitation.",
-    }),
-  });
-
-  await sendBrandedEmail({
-    to: teamInbox(),
-    subject: `Consultation request — ${input.customerName} (awaiting time)`,
-    html: brandedEmailHtml({
-      eyebrow: "New request",
-      heading: "A client requested a consultation and is choosing a time.",
-      intro: `${input.customerName} submitted a consultation request. They have been emailed a link to pick an open slot on the Onyx calendar.`,
-      fields: [
-        { label: "Client", value: input.customerName },
-        { label: "Email", value: input.customerEmail },
-        { label: "Phone", value: input.customerPhone },
-        { label: "Company", value: input.company },
-        { label: "Service", value: input.serviceName },
-        { label: "Notes", value: input.details },
-      ],
-      closing: "The meeting will appear on Google Calendar once they select a slot.",
-    }),
-    text: brandedEmailText({
-      heading: "A client requested a consultation and is choosing a time.",
-      intro: `${input.customerName} submitted a consultation request.`,
-      fields: [
-        { label: "Client", value: input.customerName },
-        { label: "Email", value: input.customerEmail },
-        { label: "Phone", value: input.customerPhone },
-        { label: "Company", value: input.company },
-        { label: "Service", value: input.serviceName },
-        { label: "Notes", value: input.details },
-      ],
-    }),
-  });
 }

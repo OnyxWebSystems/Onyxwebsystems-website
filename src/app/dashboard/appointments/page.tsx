@@ -86,7 +86,7 @@ export default async function AppointmentsPage({
             {appointments.map((a) => (
               <tr key={a.id} className="border-b border-[var(--line)] last:border-0">
                 <td className="px-4 py-3">
-                  {a.startsAt.toLocaleString("en-US", { timeZone: "America/Phoenix" })}
+                  {a.startsAt.toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}
                 </td>
                 <td className="px-4 py-3 font-medium">{customerName(a.customer)}</td>
                 <td className="px-4 py-3">{a.service.name}</td>
