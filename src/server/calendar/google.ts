@@ -1,6 +1,8 @@
 import { prisma } from "@/server/db";
 import { logger } from "@/server/logger";
-import { BRAND_REPLY_TO, BRAND_TIMEZONE } from "@/server/email/brand";
+import { BRAND_REPLY_TO, BRAND_TIMEZONE, dashboardSiteUrl } from "@/server/email/brand";
+
+export const GOOGLE_CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
 
 type GoogleEventInput = {
   title: string;
@@ -11,20 +13,50 @@ type GoogleEventInput = {
   attendeeName?: string;
 };
 
-async function googleAccessToken() {
+type GoogleConfig = {
+  refreshToken?: string;
+  calendarId?: string;
+  connectedEmail?: string;
+  connectedAt?: string;
+};
+
+export function googleOAuthRedirectUri() {
+  return `${dashboardSiteUrl()}/api/dashboard/google-calendar/callback`;
+}
+
+async function storedGoogleConfig(organizationId?: string): Promise<GoogleConfig> {
+  try {
+    const row = organizationId
+      ? await prisma.integration.findFirst({ where: { organizationId, key: "google_calendar" } })
+      : await prisma.integration.findFirst({ where: { key: "google_calendar" } });
+    return ((row?.config as GoogleConfig | null) ?? {}) as GoogleConfig;
+  } catch (error) {
+    logger.warn("Google calendar config lookup skipped", { error: String(error) });
+    return {};
+  }
+}
+
+async function googleCredentials(organizationId?: string) {
   const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_CALENDAR_REFRESH_TOKEN;
+  const stored = await storedGoogleConfig(organizationId);
+  const refreshToken = stored.refreshToken || process.env.GOOGLE_CALENDAR_REFRESH_TOKEN;
   if (!clientId || !clientSecret || !refreshToken) return null;
+  return { clientId, clientSecret, refreshToken, stored };
+}
+
+async function googleAccessToken(organizationId?: string) {
+  const creds = await googleCredentials(organizationId);
+  if (!creds) return null;
 
   try {
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: refreshToken,
+        client_id: creds.clientId,
+        client_secret: creds.clientSecret,
+        refresh_token: creds.refreshToken,
         grant_type: "refresh_token",
       }),
     });
@@ -59,19 +91,84 @@ export function isGoogleCalendarConfigured() {
   );
 }
 
+export function googleClientReady() {
+  return Boolean(process.env.GOOGLE_CALENDAR_CLIENT_ID && process.env.GOOGLE_CALENDAR_CLIENT_SECRET);
+}
+
+export function googleAuthorizeUrl(state: string) {
+  const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+  if (!clientId) return null;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: googleOAuthRedirectUri(),
+    response_type: "code",
+    scope: GOOGLE_CALENDAR_SCOPE,
+    access_type: "offline",
+    prompt: "consent",
+    state,
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+export async function exchangeGoogleAuthCode(code: string) {
+  const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error("Google Calendar client is not configured.");
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+      redirect_uri: googleOAuthRedirectUri(),
+      grant_type: "authorization_code",
+    }),
+  });
+  const body = await res.text();
+  if (!res.ok) {
+    logger.error("Google OAuth code exchange failed", { status: res.status, body });
+    throw new Error("Google did not accept this connection.");
+  }
+  const data = JSON.parse(body) as { refresh_token?: string; access_token?: string; refresh_token_expires_in?: number };
+  if (!data.refresh_token) {
+    throw new Error("Google did not return a refresh token. Allow calendar access and try again.");
+  }
+  return data;
+}
+
+export async function saveGoogleRefreshToken(input: { organizationId: string; refreshToken: string }) {
+  const existing = await storedGoogleConfig(input.organizationId);
+  const config: GoogleConfig = {
+    ...existing,
+    refreshToken: input.refreshToken,
+    connectedAt: new Date().toISOString(),
+  };
+  await prisma.integration.upsert({
+    where: { organizationId_key: { organizationId: input.organizationId, key: "google_calendar" } },
+    update: {
+      status: "CONNECTED",
+      description: "Onyx Web Systems Google Calendar",
+      config,
+    },
+    create: {
+      organizationId: input.organizationId,
+      key: "google_calendar",
+      name: "Google Calendar",
+      status: "CONNECTED",
+      description: "Onyx Web Systems Google Calendar",
+      config,
+    },
+  });
+}
+
 export async function ensureOnyxCalendar(accessToken: string, organizationId?: string) {
   if (process.env.GOOGLE_CALENDAR_ID) return process.env.GOOGLE_CALENDAR_ID;
 
   if (organizationId) {
-    try {
-      const row = await prisma.integration.findFirst({
-        where: { organizationId, key: "google_calendar" },
-      });
-      const stored = (row?.config as { calendarId?: string } | null)?.calendarId;
-      if (stored) return stored;
-    } catch (error) {
-      logger.warn("Google calendar lookup skipped", { error: String(error) });
-    }
+    const stored = await storedGoogleConfig(organizationId);
+    if (stored.calendarId) return stored.calendarId;
   }
 
   const created = await googleFetch("/calendars", accessToken, {
@@ -105,12 +202,13 @@ export async function ensureOnyxCalendar(accessToken: string, organizationId?: s
 
   if (organizationId) {
     try {
+      const existing = await storedGoogleConfig(organizationId);
       await prisma.integration.upsert({
         where: { organizationId_key: { organizationId, key: "google_calendar" } },
         update: {
           status: "CONNECTED",
           description: "Onyx Web Systems Google Calendar",
-          config: { calendarId },
+          config: { ...existing, calendarId },
         },
         create: {
           organizationId,
@@ -131,12 +229,13 @@ export async function ensureOnyxCalendar(accessToken: string, organizationId?: s
 }
 
 export async function createOnyxCalendarEvent(input: GoogleEventInput & { organizationId?: string }) {
-  if (!isGoogleCalendarConfigured()) {
+  const creds = await googleCredentials(input.organizationId);
+  if (!creds) {
     logger.info("Google Calendar not configured — event not synced");
     return { ok: false, simulated: true as const };
   }
 
-  const accessToken = await googleAccessToken();
+  const accessToken = await googleAccessToken(input.organizationId);
   if (!accessToken) return { ok: false, simulated: true as const };
 
   const calendarId = await ensureOnyxCalendar(accessToken, input.organizationId);
@@ -196,7 +295,8 @@ async function calendarsForBusyCheck(accessToken: string) {
 }
 
 export async function listGoogleBusyIntervals(from: Date, to: Date) {
-  if (!isGoogleCalendarConfigured()) return [];
+  const creds = await googleCredentials();
+  if (!creds) return [];
   try {
     const accessToken = await googleAccessToken();
     if (!accessToken) return [];

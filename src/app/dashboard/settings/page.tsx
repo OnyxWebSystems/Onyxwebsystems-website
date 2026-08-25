@@ -3,6 +3,7 @@ import { StatusBadge } from "@/components/ui/badge";
 import { getLiveIntegrationStatuses } from "@/server/channels/dispatch";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { formatPhone } from "@/lib/utils";
+import { googleOAuthRedirectUri } from "@/server/calendar/google";
 import Link from "next/link";
 
 const LABELS: Record<string, string> = {
@@ -18,12 +19,28 @@ const LABELS: Record<string, string> = {
   social: "Social inbox",
 };
 
-export default async function SettingsPage() {
+const GOOGLE_MESSAGES: Record<string, string> = {
+  connected: "Google Calendar is connected. New bookings will appear automatically.",
+  "connected-testing":
+    "Connected, but Google still has this app in Testing, so the token will expire in 7 days. Publish the app in Google Cloud, then click Connect again.",
+  denied: "Google access was cancelled.",
+  invalid: "That Google connection link was invalid. Try Connect again.",
+  failed: "Google Calendar could not be connected. Check the redirect URI on the OAuth client.",
+  "missing-client": "Google client ID and secret are missing in Vercel.",
+};
+
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const org = await getDemoOrganization();
   const live = getLiveIntegrationStatuses();
   const phone = process.env.RETELL_PHONE_NUMBER || org.phone;
   const waFrom = process.env.TWILIO_WHATSAPP_FROM;
   const smsFrom = process.env.TWILIO_SMS_FROM;
+  const sp = await searchParams;
+  const google = typeof sp.google === "string" ? sp.google : undefined;
 
   return (
     <div className="space-y-6">
@@ -32,6 +49,22 @@ export default async function SettingsPage() {
         title="Settings & integrations"
         description="Status is derived from environment credentials. SIMULATED never pretends to be live. Setup: docs/onyx-live-setup.md · Voice: docs/retell-assistant.md"
       />
+
+      <div className="cx-card p-5">
+        <div className="cx-label">Google Calendar</div>
+        <h2 className="mt-1 text-xl font-semibold">Connect once, keep it connected</h2>
+        <p className="mt-2 max-w-2xl text-sm text-[var(--ink-muted)]">
+          Publish the OAuth app in Google Cloud (Audience → In production), add this redirect URI to the Web
+          client, then connect with onyxwebsystems@gmail.com. You should not need the Playground again.
+        </p>
+        <code className="mt-3 block break-all text-xs text-[var(--ink-muted)]">{googleOAuthRedirectUri()}</code>
+        {google && GOOGLE_MESSAGES[google] ? (
+          <p className="mt-3 text-sm">{GOOGLE_MESSAGES[google]}</p>
+        ) : null}
+        <a href="/api/dashboard/google-calendar/connect" className="ox-btn-solid mt-4 inline-block px-4 py-2.5 text-sm font-semibold">
+          Connect Google Calendar
+        </a>
+      </div>
 
       <div className="cx-card p-5">
         <div className="cx-label">How to test (Loom)</div>
