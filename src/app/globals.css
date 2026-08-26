@@ -396,27 +396,92 @@ h3 {
 }
 
 @media (max-width: 1023px) {
+  html.ox-mscroll .ox-scroll-anim {
+    transition:
+      opacity 780ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 780ms cubic-bezier(0.16, 1, 0.3, 1),
+      clip-path 820ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--ox-scroll-delay, 0ms);
+  }
+
   html.ox-mscroll .ox-scroll-anim:not([data-in="true"]) {
     opacity: 0;
-    transform: translateY(28px);
+    will-change: transform, opacity, clip-path;
+  }
+
+  html.ox-mscroll .ox-scroll-anim[data-ox-motion="rise"]:not([data-in="true"]) {
+    transform: translate3d(0, 42px, 0) rotate(-1.2deg);
+    clip-path: inset(0 0 22% 0);
+  }
+
+  html.ox-mscroll .ox-scroll-anim[data-ox-motion="left"]:not([data-in="true"]) {
+    transform: translate3d(-36px, 8px, 0);
+    clip-path: inset(0 28% 0 0);
+  }
+
+  html.ox-mscroll .ox-scroll-anim[data-ox-motion="right"]:not([data-in="true"]) {
+    transform: translate3d(36px, 8px, 0);
+    clip-path: inset(0 0 0 28%);
+  }
+
+  html.ox-mscroll .ox-scroll-anim[data-ox-motion="clip"]:not([data-in="true"]) {
+    transform: translate3d(0, 18px, 0);
+    clip-path: inset(0 0 42% 0);
+  }
+
+  html.ox-mscroll .ox-scroll-anim[data-ox-motion="scale"]:not([data-in="true"]) {
+    transform: scale(0.9);
+    clip-path: inset(8%);
   }
 
   html.ox-mscroll .ox-scroll-anim[data-in="true"] {
-    opacity: 1;
     transform: none;
-    transition:
-      opacity 640ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 640ms cubic-bezier(0.22, 1, 0.36, 1);
-    transition-delay: var(--ox-scroll-delay, 0ms);
+    clip-path: inset(0);
+  }
+
+  @keyframes ox-reveal {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 16px, 0);
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      clip-path: inset(0);
+    }
+  }
+
+  .ox-reveal {
+    animation: ox-reveal 780ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .ox-reveal-delay-1 {
+    animation-delay: 120ms;
+  }
+
+  .ox-reveal-delay-2 {
+    animation-delay: 220ms;
+  }
+
+  .ox-reveal-delay-3 {
+    animation-delay: 340ms;
+  }
+
+  .ox-rule {
+    animation: ox-rule 900ms cubic-bezier(0.16, 1, 0.3, 1) 380ms both;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html.ox-mscroll .ox-scroll-anim,
   html.ox-mscroll .ox-scroll-anim[data-in="true"] {
-    opacity: 1;
+    opacity: unset;
     transform: none;
+    clip-path: none;
+    filter: none;
     transition: none;
+    will-change: auto;
   }
 }
 

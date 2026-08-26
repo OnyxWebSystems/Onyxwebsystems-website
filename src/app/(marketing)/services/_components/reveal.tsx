@@ -4,6 +4,16 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { cn } from "@/lib/utils";
 import styles from "./services.module.css";
 
+const MOTIONS = ["clip", "left", "rise", "right", "scale"] as const;
+
+let motionCursor = 0;
+
+function nextMotion() {
+  const motion = MOTIONS[motionCursor % MOTIONS.length];
+  motionCursor += 1;
+  return motion;
+}
+
 type RevealProps = {
   children: ReactNode;
   className?: string;
@@ -20,6 +30,7 @@ function shouldAnimate() {
 export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(true);
+  const [motion] = useState(nextMotion);
 
   useEffect(() => {
     const el = ref.current;
@@ -37,7 +48,7 @@ export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
           io.disconnect();
         }
       },
-      { threshold: 0.12, rootMargin: "0px 0px -12% 0px" },
+      { threshold: 0, rootMargin: "80px 0px -8% 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -47,6 +58,7 @@ export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
     <div
       ref={ref}
       data-ox-reveal=""
+      data-ox-motion={motion}
       className={cn(shown ? styles.revealed : styles.hidden, className)}
       style={{ transitionDelay: shown ? `${delayMs}ms` : "0ms" } as CSSProperties}
     >

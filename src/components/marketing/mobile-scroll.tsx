@@ -11,6 +11,8 @@ const SELECTOR = [
   ".marketing-shell footer > div",
 ].join(",");
 
+const MOTIONS = ["clip", "left", "rise", "right", "scale"] as const;
+
 function isMobileScroll() {
   return (
     window.matchMedia("(max-width: 1023px)").matches &&
@@ -20,7 +22,16 @@ function isMobileScroll() {
 
 function inView(el: HTMLElement) {
   const rect = el.getBoundingClientRect();
-  return rect.top < window.innerHeight * 0.9 && rect.bottom > 48;
+  return rect.top < window.innerHeight * 0.88 && rect.bottom > 64;
+}
+
+function skip(el: HTMLElement) {
+  if (el.closest(".ox-mobile-nav")) return true;
+  if (el.querySelector("[data-ox-reveal], .ox-reveal")) return true;
+  const style = getComputedStyle(el);
+  if (style.pointerEvents === "none") return true;
+  if (style.position === "absolute" || style.position === "fixed") return true;
+  return false;
 }
 
 export function MobileScrollAnimations() {
@@ -38,6 +49,7 @@ export function MobileScrollAnimations() {
       document.querySelectorAll<HTMLElement>(".ox-scroll-anim").forEach((el) => {
         el.classList.remove("ox-scroll-anim");
         delete el.dataset.in;
+        delete el.dataset.oxMotion;
         el.style.removeProperty("--ox-scroll-delay");
       });
     };
@@ -46,15 +58,13 @@ export function MobileScrollAnimations() {
       teardown();
       if (!isMobileScroll()) return;
 
-      const nodes = [...document.querySelectorAll<HTMLElement>(SELECTOR)].filter((el) => {
-        if (el.closest(".ox-mobile-nav")) return false;
-        if (el.querySelector("[data-ox-reveal]")) return false;
-        return true;
-      });
+      const raw = [...document.querySelectorAll<HTMLElement>(SELECTOR)].filter((el) => !skip(el));
+      const nodes = raw.filter((el) => !raw.some((other) => other !== el && el.contains(other)));
 
       nodes.forEach((el, index) => {
         el.classList.add("ox-scroll-anim");
-        el.style.setProperty("--ox-scroll-delay", `${Math.min((index % 5) * 70, 280)}ms`);
+        el.dataset.oxMotion = MOTIONS[index % MOTIONS.length];
+        el.style.setProperty("--ox-scroll-delay", `${Math.min((index % 4) * 90, 270)}ms`);
         if (inView(el)) el.dataset.in = "true";
       });
 
@@ -69,7 +79,7 @@ export function MobileScrollAnimations() {
             observer?.unobserve(el);
           }
         },
-        { threshold: 0.12, rootMargin: "0px 0px -12% 0px" },
+        { threshold: 0, rootMargin: "80px 0px -8% 0px" },
       );
 
       nodes.forEach((el) => {
