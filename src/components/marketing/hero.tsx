@@ -5,10 +5,10 @@ import { ServicePhraseCarousel } from "@/components/marketing/service-phrase-car
 export function Hero() {
   return (
     <section className="ox-hero relative">
-      <div className="relative mx-auto grid min-h-[92vh] max-w-6xl items-center gap-10 px-6 py-24 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)]">
+      <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 md:min-h-[92vh] md:py-24 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)]">
         <div className="relative z-10 max-w-3xl">
           <p className="ox-reveal text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">CREATE. CONNECT. CONVERT.</p>
-          <h1 className="ox-reveal ox-reveal-delay-1 mt-6 font-[family-name:var(--font-syne)] text-5xl font-bold leading-[0.95] tracking-tight sm:text-7xl">
+          <h1 className="ox-reveal ox-reveal-delay-1 mt-6 font-[family-name:var(--font-syne)] text-4xl font-bold leading-[0.95] tracking-tight min-[390px]:text-5xl sm:text-7xl">
             We build
             <br />
             systems that
@@ -19,7 +19,7 @@ export function Hero() {
           <p className="ox-reveal ox-reveal-delay-3 mt-8 max-w-lg text-base leading-relaxed text-[#5c5c5c]">
             Business Operating Systems, custom apps, and premium web experiences — built as one connected stack.
           </p>
-          <div className="ox-reveal ox-reveal-delay-3 mt-10 flex flex-wrap gap-3">
+          <div className="ox-reveal ox-reveal-delay-3 ox-cta-row mt-10">
             <Link href="/book" className="ox-btn-solid px-6 py-3 text-sm font-medium">
               Book a Consultation
             </Link>
@@ -35,10 +35,6 @@ export function Hero() {
             </div>
             <span className="ox-hero-wordmark">onyxwebsystems</span>
           </div>
-        </div>
-        <div className="relative z-10 flex flex-col items-center justify-center gap-3 md:hidden">
-          <OnyxCardStack size={96} />
-          <span className="ox-hero-wordmark ox-hero-wordmark-mobile">onyxwebsystems</span>
         </div>
       </div>
     </section>

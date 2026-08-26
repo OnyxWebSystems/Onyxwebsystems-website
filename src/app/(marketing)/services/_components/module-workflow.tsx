@@ -28,7 +28,7 @@ export function ModuleWorkflow() {
 
   return (
     <section className="border-b border-black bg-[#fafafa]">
-      <div className="mx-auto max-w-6xl px-6 py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <Reveal>
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">Sales</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">

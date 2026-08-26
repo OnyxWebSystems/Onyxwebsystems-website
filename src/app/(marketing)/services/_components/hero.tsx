@@ -11,7 +11,7 @@ export function ServicesHero() {
           backgroundSize: "48px 48px",
         }}
       />
-      <div className="relative mx-auto flex min-h-[78vh] max-w-6xl flex-col justify-center px-6 py-24">
+      <div className="relative mx-auto flex max-w-6xl flex-col justify-center px-6 py-16 md:min-h-[78vh] md:py-24">
         <p className="ox-reveal text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">Services</p>
         <h1 className="ox-reveal ox-reveal-delay-1 mt-5 max-w-4xl text-4xl font-bold tracking-tight sm:text-6xl lg:text-[4.5rem] lg:leading-[1.05]">
           We build the systems behind modern businesses.
@@ -20,7 +20,7 @@ export function ServicesHero() {
           From business operating systems to high-performance websites and custom applications, Onyx designs and
           builds digital infrastructure around how your business actually operates.
         </p>
-        <div className="ox-reveal ox-reveal-delay-3 mt-10 flex flex-wrap gap-3">
+        <div className="ox-reveal ox-reveal-delay-3 ox-cta-row mt-10">
           <ServicesLink href="#start-a-project" variant="solid">
             Start a project
           </ServicesLink>

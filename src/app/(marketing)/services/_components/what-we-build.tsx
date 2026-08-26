@@ -5,7 +5,7 @@ import styles from "./services.module.css";
 export function WhatWeBuild() {
   return (
     <section className="border-b border-black">
-      <div className="mx-auto max-w-6xl px-6 py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <Reveal>
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">What we build</p>
         </Reveal>
@@ -41,7 +41,7 @@ export function WhatWeBuild() {
                     High-performance websites and custom applications designed around your brand, users and business
                     goals.
                   </p>
-                  <div className="mt-8 flex flex-wrap gap-3">
+                  <div className="ox-cta-row mt-8">
                     <ServicesLink href="/services/websites" variant="ghost">
                       Explore websites
                     </ServicesLink>

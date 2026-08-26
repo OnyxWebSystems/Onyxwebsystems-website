@@ -19,7 +19,7 @@ export default function HomePage() {
             Every engagement is scoped to your modules, workflows, and growth goals. No fixed menu pricing — we
             design the system, then quote the work.
           </p>
-          <Link href="/book" className="ox-btn-solid mt-8 inline-block px-6 py-3 text-sm font-medium">
+          <Link href="/book" className="ox-btn-solid mt-8 inline-flex w-full items-center justify-center px-6 py-3 text-sm font-medium sm:w-auto">
             Get a Custom Quote
           </Link>
         </div>

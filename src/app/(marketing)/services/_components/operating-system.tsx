@@ -20,7 +20,7 @@ export function OperatingSystem() {
 
   return (
     <section id="bos" className="scroll-mt-28 border-b border-black">
-      <div id="operating-systems" className="mx-auto max-w-6xl scroll-mt-28 px-6 py-24">
+      <div id="operating-systems" className="mx-auto max-w-6xl scroll-mt-28 px-6 py-16 md:py-24">
         <Reveal>
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">Business operating systems</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
@@ -118,7 +118,7 @@ export function OperatingSystem() {
                 <li key={mod.id} className="border-t border-black/15">
                   <button
                     type="button"
-                    className="flex w-full items-baseline justify-between gap-4 py-4 text-left"
+                    className="flex min-h-12 w-full items-baseline justify-between gap-4 py-4 text-left"
                     onClick={() => setActiveId(on ? null : mod.id)}
                     aria-expanded={on}
                   >

@@ -191,7 +191,7 @@ export function BookConsultationForm() {
                 setServiceInterest(value);
                 setIntake({});
               }}
-              className={`border px-3 py-2 text-sm ${
+              className={`min-h-11 w-full border px-3 py-2 text-sm sm:w-auto ${
                 serviceInterest === value ? "ox-btn-solid border-black" : "border-black/20"
               }`}
             >
@@ -320,7 +320,7 @@ export function BookConsultationForm() {
       <button
         type="submit"
         disabled={submitting || !startsAt}
-        className="ox-btn-solid px-6 py-3 text-sm font-medium disabled:opacity-50"
+        className="ox-btn-solid w-full px-6 py-3 text-sm font-medium disabled:opacity-50 sm:w-auto"
       >
         {submitting ? "Sending…" : "Request consultation"}
       </button>

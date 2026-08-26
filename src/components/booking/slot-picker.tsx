@@ -102,15 +102,15 @@ export function SlotPicker({
 
   return (
     <div className="border border-black/15">
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/10 px-4 py-4">
+      <div className="flex flex-col gap-4 border-b border-black/10 px-4 py-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-[#5c5c5c]">Choose a time</p>
           <p className="mt-1 text-sm text-[#5c5c5c]">Only open Onyx hours are shown. Times convert to South Africa time for our team.</p>
         </div>
-        <label className="text-sm">
+        <label className="w-full text-sm sm:w-auto">
           <span className="mb-1 block text-xs uppercase tracking-[0.14em] text-[#5c5c5c]">Timezone</span>
           <select
-            className="border border-black/20 bg-white px-3 py-2 text-sm outline-none focus:border-black"
+            className="w-full border border-black/20 bg-white px-3 py-2.5 text-sm outline-none focus:border-black sm:w-auto"
             value={timeZone}
             onChange={(e) => {
               onChange("", null);
@@ -128,18 +128,18 @@ export function SlotPicker({
 
       <div className="grid gap-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="p-4">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between gap-2">
             <button
               type="button"
-              className="border border-black/15 px-3 py-1 text-sm"
+              className="min-h-11 border border-black/15 px-3 text-sm"
               onClick={() => setCursor((c) => (c.m === 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m: c.m - 1 }))}
             >
               Previous
             </button>
-            <p className="text-sm font-medium">{monthLabel}</p>
+            <p className="text-center text-sm font-medium">{monthLabel}</p>
             <button
               type="button"
-              className="border border-black/15 px-3 py-1 text-sm"
+              className="min-h-11 border border-black/15 px-3 text-sm"
               onClick={() => setCursor((c) => (c.m === 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m: c.m + 1 }))}
             >
               Next
@@ -166,7 +166,7 @@ export function SlotPicker({
                     setSelectedDate(cell.dateKey);
                     onChange("", null);
                   }}
-                  className={`aspect-square text-sm transition-colors ${
+                  className={`min-h-11 text-sm transition-colors sm:aspect-square sm:min-h-0 ${
                     cell.open
                       ? selectedDate === cell.dateKey
                         ? "bg-black text-white"
@@ -192,13 +192,13 @@ export function SlotPicker({
             <>
               <p className="text-sm font-medium">{selectedDay.dayLabel}</p>
               <p className="mt-1 text-xs text-[#7a7a76]">Times shown in {timezoneLabel(timeZone)}</p>
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {selectedDay.slots.map((slot) => (
                   <button
                     key={slot.startsAt}
                     type="button"
                     onClick={() => onChange(slot.startsAt, slot)}
-                    className={`border px-3 py-2 text-left text-sm ${
+                    className={`min-h-12 border px-3 py-2 text-left text-sm ${
                       value === slot.startsAt ? "ox-btn-solid border-black" : "border-black/20 hover:border-black"
                     }`}
                   >

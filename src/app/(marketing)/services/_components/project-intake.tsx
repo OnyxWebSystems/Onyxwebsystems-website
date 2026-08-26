@@ -159,7 +159,7 @@ export function ProjectIntake() {
   if (done) {
     return (
       <section id="start-a-project" className="scroll-mt-28 border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">Start a project</p>
           <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">Request received.</h2>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-[#5c5c5c]">
@@ -186,7 +186,7 @@ export function ProjectIntake() {
 
   return (
     <section id="start-a-project" className="scroll-mt-28 border-b border-black">
-      <div className="mx-auto max-w-6xl px-6 py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <Reveal>
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">Start a project</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">Start a project.</h2>
@@ -365,7 +365,7 @@ export function ProjectIntake() {
 
             {error ? <p className="mt-6 text-sm text-[#8b1538]">{error}</p> : null}
 
-            <div className="mt-10 flex flex-wrap items-center gap-3">
+            <div className="ox-cta-row mt-10 items-center">
               {step > 0 ? (
                 <button
                   type="button"

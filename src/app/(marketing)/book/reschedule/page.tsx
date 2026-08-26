@@ -11,9 +11,9 @@ export default async function ReschedulePage({
   const token = Array.isArray(sp.token) ? sp.token[0] : (sp.token ?? "");
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16">
+    <div className="mx-auto max-w-4xl px-6 py-12 md:py-16">
       <p className="text-sm uppercase tracking-[0.18em] text-[#5c5c5c]">Consultation</p>
-      <h1 className="mt-3 text-4xl font-semibold tracking-tight">Reschedule your meeting</h1>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Reschedule your meeting</h1>
       <p className="mt-4 text-sm text-[#5c5c5c]">
         You can choose another open time until the day of the meeting. On the day itself, this time is locked.
       </p>

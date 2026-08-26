@@ -4,7 +4,7 @@ import { Reveal } from "./reveal";
 export function FinalCta() {
   return (
     <section className="border-b border-black">
-      <div className="mx-auto max-w-6xl px-6 py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <Reveal>
           <h2 className="max-w-4xl text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Let&apos;s build what your business needs next.
@@ -13,7 +13,7 @@ export function FinalCta() {
             Whether you&apos;re replacing manual processes, launching a new digital product or building the
             infrastructure for your next stage of growth, let&apos;s talk.
           </p>
-          <div className="mt-10 flex flex-wrap gap-3">
+          <div className="ox-cta-row mt-10">
             <ServicesLink href="#start-a-project" variant="solid">
               Start a project
             </ServicesLink>

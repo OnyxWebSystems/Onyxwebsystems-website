@@ -22,7 +22,7 @@ export function WorkHero({
           backgroundSize: "48px 48px",
         }}
       />
-      <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
+      <div className="relative mx-auto max-w-6xl px-6 py-16 md:py-28">
         <Link href="/services" className={styles.workBack}>
           <span className={styles.workBackArrow} aria-hidden>
             ←
@@ -68,7 +68,7 @@ export function WorkCase({
             </p>
             <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">{name}</h2>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-[#5c5c5c]">{story}</p>
-            <div className="mt-8 flex flex-wrap gap-3">{actions}</div>
+            <div className="ox-cta-row mt-8">{actions}</div>
           </div>
         </div>
       </Reveal>
@@ -87,11 +87,11 @@ export function WorkCta({
 }) {
   return (
     <section className="border-b border-black">
-      <div className="mx-auto max-w-6xl px-6 py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <Reveal>
           <h2 className="max-w-4xl text-3xl font-bold tracking-tight sm:text-5xl">{title}</h2>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#5c5c5c]">{body}</p>
-          <div className="mt-10 flex flex-wrap gap-3">{actions}</div>
+          <div className="ox-cta-row mt-10">{actions}</div>
         </Reveal>
       </div>
     </section>

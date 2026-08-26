@@ -81,7 +81,7 @@ export default function AboutPage() {
             backgroundSize: "48px 48px",
           }}
         />
-        <div className="relative mx-auto flex min-h-[72vh] max-w-6xl flex-col justify-center px-6 py-24">
+        <div className="relative mx-auto flex max-w-6xl flex-col justify-center px-6 py-16 md:min-h-[72vh] md:py-24">
           <p className="ox-reveal text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">About Onyx</p>
           <h1 className="ox-reveal ox-reveal-delay-1 mt-5 max-w-4xl text-4xl font-bold tracking-tight sm:text-6xl lg:text-[4.5rem] lg:leading-[1.05]">
             We&apos;re building more than websites.
@@ -98,7 +98,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">How it started</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">Two brothers. One vision.</h2>
           <div className="mt-14 grid items-start gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -139,7 +139,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">The next chapter</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">Building it together.</h2>
           <div className="mt-14 grid items-start gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
@@ -181,7 +181,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">From websites to business systems</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
             What started with websites has become a technology company.
@@ -208,7 +208,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black bg-black text-white">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#a3a3a0]">Our philosophy</p>
           <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">CREATE. CONNECT. CONVERT.</h2>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#a3a3a0]">
@@ -226,7 +226,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">How we think</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
             We don&apos;t start with technology.
@@ -258,7 +258,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">Our belief</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">
             Technology should work for you.
@@ -275,7 +275,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">The Onyx standard</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-5xl">How we measure the work.</h2>
           <div className="mt-14 grid gap-px bg-black sm:grid-cols-2 lg:grid-cols-5">
@@ -290,7 +290,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">Where we&apos;re going</p>
           <h2 className="mt-4 max-w-4xl text-3xl font-bold tracking-tight sm:text-5xl">
             Still at the beginning. Already bigger than websites.
@@ -310,7 +310,7 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-black">
-        <div className="mx-auto max-w-6xl px-6 py-24">
+        <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">CREATE. CONNECT. CONVERT.</p>
           <h2 className="mt-4 max-w-4xl text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Let&apos;s build what&apos;s next.
@@ -318,7 +318,7 @@ export default function AboutPage() {
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#5c5c5c]">
             Your business has a way of working. We&apos;ll build the technology around it.
           </p>
-          <div className="mt-10 flex flex-wrap gap-3">
+          <div className="ox-cta-row mt-10">
             <Link href="/book" className="ox-btn-solid px-6 py-3 text-sm font-medium">
               Work With Us
             </Link>

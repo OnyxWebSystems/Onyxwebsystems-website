@@ -66,7 +66,7 @@ export function ScheduleConsultationForm({ token }: { token: string }) {
       <button
         type="submit"
         disabled={submitting || !startsAt}
-        className="ox-btn-solid px-6 py-3 text-sm font-medium disabled:opacity-50"
+        className="ox-btn-solid w-full px-6 py-3 text-sm font-medium disabled:opacity-50 sm:w-auto"
       >
         {submitting ? "Scheduling…" : "Confirm this time"}
       </button>

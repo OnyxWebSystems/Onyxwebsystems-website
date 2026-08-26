@@ -61,7 +61,7 @@ function ServiceCard({ service }: { service: (typeof SERVICES)[number] }) {
   return (
     <Link
       href={service.href}
-      className="ox-service-card group relative isolate block h-[26rem] overflow-hidden border border-white md:h-[32rem]"
+      className="ox-service-card group relative isolate block h-[20rem] overflow-hidden border border-white md:h-[32rem]"
       aria-label={`${service.title}. ${service.body}`}
       onPointerEnter={playVideo}
       onPointerLeave={stopVideo}

@@ -5,7 +5,7 @@ import styles from "./services.module.css";
 export function DigitalProducts() {
   return (
     <section className="border-b border-black">
-      <div className="mx-auto max-w-6xl px-6 py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <Reveal>
           <p className="text-sm uppercase tracking-[0.22em] text-[#5c5c5c]">Digital products</p>
         </Reveal>
