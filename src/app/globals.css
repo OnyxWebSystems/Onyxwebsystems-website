@@ -723,6 +723,13 @@ h3 {
   overflow: visible;
 }
 
+@media (max-width: 1023px) {
+  .ox-brand .ox-brand-mark {
+    width: 22px;
+    height: 22px;
+  }
+}
+
 .ox-brand-cards {
   --ox-spread: 2.45;
   transition: --ox-spread 520ms cubic-bezier(0.22, 1, 0.36, 1);
