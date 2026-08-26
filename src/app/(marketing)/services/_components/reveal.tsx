@@ -10,18 +10,26 @@ type RevealProps = {
   delayMs?: number;
 };
 
+function shouldAnimate() {
+  return (
+    window.matchMedia("(max-width: 1023px)").matches &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(true);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      setShown(true);
-      return;
-    }
+    if (!el || !shouldAnimate()) return;
+
+    const rect = el.getBoundingClientRect();
+    const visible = rect.top < window.innerHeight * 0.9 && rect.bottom > 48;
+    if (visible) return;
+
+    setShown(false);
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -29,19 +37,16 @@ export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
           io.disconnect();
         }
       },
-      { threshold: 0.01, rootMargin: "80px 0px 80px 0px" },
+      { threshold: 0.12, rootMargin: "0px 0px -12% 0px" },
     );
     io.observe(el);
-    const fallback = window.setTimeout(() => setShown(true), 900);
-    return () => {
-      io.disconnect();
-      window.clearTimeout(fallback);
-    };
+    return () => io.disconnect();
   }, []);
 
   return (
     <div
       ref={ref}
+      data-ox-reveal=""
       className={cn(shown ? styles.revealed : styles.hidden, className)}
       style={{ transitionDelay: shown ? `${delayMs}ms` : "0ms" } as CSSProperties}
     >

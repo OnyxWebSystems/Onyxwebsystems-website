@@ -395,6 +395,31 @@ h3 {
   overflow-x: clip;
 }
 
+@media (max-width: 1023px) {
+  html.ox-mscroll .ox-scroll-anim:not([data-in="true"]) {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  html.ox-mscroll .ox-scroll-anim[data-in="true"] {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 640ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 640ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--ox-scroll-delay, 0ms);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.ox-mscroll .ox-scroll-anim,
+  html.ox-mscroll .ox-scroll-anim[data-in="true"] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 @property --ox-spread {
   syntax: "<number>";
   inherits: true;
