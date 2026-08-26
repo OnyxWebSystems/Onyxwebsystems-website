@@ -126,8 +126,8 @@ export function SlotPicker({
         </label>
       </div>
 
-      <div className="grid gap-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="p-4">
+      <div className="grid gap-0 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <div className="p-3 sm:p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
             <button
               type="button"
@@ -145,7 +145,7 @@ export function SlotPicker({
               Next
             </button>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-[11px] uppercase tracking-[0.12em] text-[#7a7a76]">
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-[0.08em] text-[#7a7a76] sm:text-[11px] sm:tracking-[0.12em]">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
               <div key={d} className="py-2">
                 {d}
@@ -166,7 +166,7 @@ export function SlotPicker({
                     setSelectedDate(cell.dateKey);
                     onChange("", null);
                   }}
-                  className={`min-h-11 text-sm transition-colors sm:aspect-square sm:min-h-0 ${
+                  className={`aspect-square w-full text-sm transition-colors ${
                     cell.open
                       ? selectedDate === cell.dateKey
                         ? "bg-black text-white"
@@ -181,7 +181,7 @@ export function SlotPicker({
           </div>
         </div>
 
-        <div className="border-t border-black/10 p-4 lg:border-l lg:border-t-0">
+        <div className="border-t border-black/10 p-3 sm:p-4 md:border-l md:border-t-0">
           {loading ? (
             <p className="text-sm text-[#5c5c5c]">Loading open times…</p>
           ) : error ? (
@@ -192,7 +192,7 @@ export function SlotPicker({
             <>
               <p className="text-sm font-medium">{selectedDay.dayLabel}</p>
               <p className="mt-1 text-xs text-[#7a7a76]">Times shown in {timezoneLabel(timeZone)}</p>
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-2 gap-2">
                 {selectedDay.slots.map((slot) => (
                   <button
                     key={slot.startsAt}

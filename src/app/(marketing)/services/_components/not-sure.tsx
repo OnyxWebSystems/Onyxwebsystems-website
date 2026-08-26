@@ -1,15 +1,7 @@
-"use client";
-
-import { INTAKE_PRESET_EVENT } from "./data";
 import { Reveal } from "./reveal";
-import { ServicesButton } from "./services-link";
+import { ServicesLink } from "./services-link";
 
 export function NotSure() {
-  function goToIntake() {
-    window.dispatchEvent(new CustomEvent(INTAKE_PRESET_EVENT, { detail: { lookingFor: "not-sure" } }));
-    document.getElementById("start-a-project")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   return (
     <section className="border-b border-black bg-[#fafafa]">
       <div className="mx-auto max-w-6xl px-6 py-16 md:py-20">
@@ -20,9 +12,9 @@ export function NotSure() {
             biggest impact.
           </p>
           <div className="mt-8">
-            <ServicesButton variant="solid" onClick={goToIntake}>
+            <ServicesLink href="/book" variant="solid">
               Find the right solution
-            </ServicesButton>
+            </ServicesLink>
           </div>
         </Reveal>
       </div>

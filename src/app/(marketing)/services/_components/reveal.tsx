@@ -29,10 +29,14 @@ export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
           io.disconnect();
         }
       },
-      { threshold: 0.16, rootMargin: "0px 0px -10% 0px" },
+      { threshold: 0.01, rootMargin: "80px 0px 80px 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    const fallback = window.setTimeout(() => setShown(true), 900);
+    return () => {
+      io.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   return (
