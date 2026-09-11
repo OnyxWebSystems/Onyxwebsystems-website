@@ -51,6 +51,9 @@ type Metrics = {
   };
   social: {
     enquiriesHandled: number;
+    instagram: number;
+    facebook: number;
+    tiktok: number;
     channelSwitches: number;
     simulated: boolean;
   };
@@ -125,7 +128,8 @@ function AnalyticsInner() {
   const showSms = channel === "all" || channel === "sms";
   const showMessaging = showWhatsApp || showSms;
   const showEmail = channel === "all" || channel === "email";
-  const showSocial = channel === "all" || channel === "facebook" || channel === "instagram";
+  const showSocial =
+    channel === "all" || channel === "facebook" || channel === "instagram" || channel === "tiktok";
   const [data, setData] = useState<Metrics | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -251,11 +255,15 @@ function AnalyticsInner() {
             <section className="space-y-3">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg">Social DM</h2>
-                <span className="cx-badge cx-badge-simulated">SIMULATED</span>
+                {data.social.simulated ? (
+                  <span className="cx-badge cx-badge-simulated">NO LIVE DMS YET</span>
+                ) : null}
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Metric label="Enquiries handled" value={data.social.enquiriesHandled} />
-                <Metric label="Channel switches" value={data.social.channelSwitches} />
+                <Metric label="Instagram" value={data.social.instagram} />
+                <Metric label="Facebook" value={data.social.facebook} />
+                <Metric label="TikTok" value={data.social.tiktok} />
               </div>
             </section>
           ) : null}

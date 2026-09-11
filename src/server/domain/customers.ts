@@ -66,34 +66,61 @@ export async function createCustomer(input: {
   postalCode?: string | null;
   customerType?: string;
   channel?: string;
+  notes?: string | null;
+  socialIdentity?: { channel: string; value: string } | null;
 }) {
+  const social = input.socialIdentity?.value?.trim();
+  const identities = [
+    ...(input.phone && !social
+      ? [{ channel: input.channel === "whatsapp" ? "whatsapp" : "phone", value: input.phone.replace(/\D/g, ""), isPrimary: true }]
+      : []),
+    ...(input.email
+      ? [{ channel: "email", value: input.email.toLowerCase(), isPrimary: !input.phone && !social }]
+      : []),
+    ...(social
+      ? [{ channel: input.socialIdentity!.channel, value: social, isPrimary: true }]
+      : []),
+  ];
   const customer = await prisma.customer.create({
     data: {
       organizationId: input.organizationId,
       firstName: input.firstName,
       lastName: input.lastName,
       email: input.email ?? undefined,
-      phone: input.phone ?? undefined,
+      phone: input.phone && !social ? input.phone : undefined,
       addressLine1: input.addressLine1 ?? undefined,
       city: input.city ?? undefined,
       state: input.state ?? "AZ",
       postalCode: input.postalCode ?? undefined,
       customerType: input.customerType ?? "lead",
-      identities: {
-        create: [
-          ...(input.phone
-            ? [{ channel: input.channel === "whatsapp" ? "whatsapp" : "phone", value: input.phone.replace(/\D/g, ""), isPrimary: true }]
-            : []),
-          ...(input.email
-            ? [{ channel: "email", value: input.email.toLowerCase(), isPrimary: !input.phone }]
-            : []),
-        ],
-      },
+      notes: input.notes ?? undefined,
+      ...(identities.length ? { identities: { create: identities } } : {}),
     },
     include: { identities: true },
   });
   logger.info("Customer created", { customerId: customer.id });
   return customer;
+}
+
+export async function ensureCustomerIdentity(customerId: string, channel: string, value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const existing = await prisma.customerIdentity.findFirst({
+    where: {
+      customerId,
+      channel,
+      value: { equals: trimmed, mode: "insensitive" },
+    },
+  });
+  if (existing) return existing;
+  try {
+    return await prisma.customerIdentity.create({
+      data: { customerId, channel, value: trimmed, isPrimary: false },
+    });
+  } catch (error) {
+    logger.warn("Could not attach customer identity", { customerId, channel, error: String(error) });
+    return null;
+  }
 }
 
 export async function updateCustomerName(customerId: string, firstName: string, lastName: string) {

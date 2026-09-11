@@ -62,7 +62,7 @@ function identityFor(customer: {
 } | null, channel: string) {
   if (!customer) return "Unknown";
   if (channel === "email" && customer.email) return customer.email;
-  if ((channel === "instagram" || channel === "facebook") && customer.identities) {
+  if ((channel === "instagram" || channel === "facebook" || channel === "tiktok") && customer.identities) {
     const social = customer.identities.find((i) => i.channel === channel);
     if (social) return social.value;
   }
@@ -71,11 +71,23 @@ function identityFor(customer: {
   return "—";
 }
 
-export async function listActivityThreads(organizationId: string, take = 40): Promise<ThreadListItem[]> {
+export async function listActivityThreads(
+  organizationId: string,
+  take = 40,
+  filters?: { channel?: string | null; status?: string | null; q?: string | null },
+): Promise<ThreadListItem[]> {
   await backfillOrphanRetellThreads(organizationId);
 
+  const channel = filters?.channel && filters.channel !== "all" ? filters.channel : undefined;
+  const status = filters?.status && filters.status !== "all" ? filters.status : undefined;
+  const q = filters?.q?.trim().toLowerCase();
+
   const conversations = await prisma.conversation.findMany({
-    where: { organizationId },
+    where: {
+      organizationId,
+      ...(channel ? { channel } : {}),
+      ...(status ? { status } : {}),
+    },
     orderBy: { startedAt: "desc" },
     take: 200,
     include: {
@@ -150,6 +162,10 @@ export async function listActivityThreads(organizationId: string, take = 40): Pr
   }
 
   return threads
+    .filter((t) => {
+      if (!q) return true;
+      return `${t.name} ${t.identity} ${t.preview} ${t.channel} ${t.intentLabel}`.toLowerCase().includes(q);
+    })
     .sort((a, b) => new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime())
     .slice(0, take);
 }

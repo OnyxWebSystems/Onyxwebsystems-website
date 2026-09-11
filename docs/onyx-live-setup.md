@@ -121,10 +121,36 @@ Customers also receive an `.ics` invite and an “Add to Google Calendar” link
 
 ---
 
-## 4. Optional later
+## 4. Social DMs (Instagram, Facebook, TikTok)
 
-- Meta Instagram / Facebook Messaging → until then Social stays **SIMULATED**
-- Google Calendar OAuth → Internal Calendar stays CONNECTED; Google is READY_FOR_INTEGRATION
+Official APIs only. Full App Review / beta notes: `docs/social-messaging.md`.
+
+Webhook URLs (must be public HTTPS — same `PUBLIC_APP_URL` as Twilio):
+
+- Meta (Instagram + Messenger): `{PUBLIC_APP_URL}/api/webhooks/meta`
+- TikTok Business Messaging: `{PUBLIC_APP_URL}/api/webhooks/tiktok`
+
+```bash
+META_APP_ID=
+META_APP_SECRET=
+META_VERIFY_TOKEN=
+META_PAGE_ACCESS_TOKEN=
+META_PAGE_ID=
+INSTAGRAM_BUSINESS_ACCOUNT_ID=
+SOCIAL_AI_REPLIES=true
+
+TIKTOK_APP_ID=
+TIKTOK_APP_SECRET=
+TIKTOK_ACCESS_TOKEN=
+TIKTOK_BUSINESS_ACCOUNT_ID=
+```
+
+Settings shows Instagram / Facebook / TikTok as **CONNECTED** only when those credentials exist. Until then they stay **READY_FOR_INTEGRATION** — never fake connected.
+
+---
+
+## 5. Optional later
+
 - Custom domain `onyxwebsystems.co.za` → point at Vercel
 
 ---
@@ -139,7 +165,7 @@ Customers also receive an `.ics` invite and an “Add to Google Calendar” link
 6. Dial Retell number → book another consultation live  
 7. **Analytics** — phone metrics, peak hours, 7/30/90 filters  
 8. WhatsApp / SMS enquiry → reply / ticket / appointment  
-9. Settings — Retell / Twilio / Resend statuses truthful (no fake CONNECTED)  
+9. Settings — Retell / Twilio / Resend / Instagram / Facebook / TikTok statuses truthful (no fake CONNECTED)  
 10. Close story: Customer Experience module inside a Business Operating System  
 
 Operator login: allowlisted Gmail + password, then emailed verification code.
@@ -148,5 +174,6 @@ Operator login: allowlisted Gmail + password, then emailed verification code.
 
 ## Related docs
 
+- `docs/social-messaging.md` — Instagram, Facebook, TikTok official APIs + App Review  
 - `docs/retell-assistant.md` — agent + tool schema detail  
 - `docs/live-setup.md` — legacy notes (prefer this file for Onyx)

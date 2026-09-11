@@ -4,7 +4,7 @@ Run after completing `docs/live-setup.md`.
 
 ## Automated (repo)
 
-- [x] Unit tests (`npm test`) — signature helpers, routing, urgency, tool param parsing  
+- [x] Unit tests (`npm test`) — signature helpers, routing, urgency, tool param parsing, Meta/TikTok signatures  
 - [x] Production build (`npm run build`)  
 - [x] Twilio webhook returns **503 READY_FOR_INTEGRATION** without Twilio env  
 - [x] Vapi webhook returns **503** without Vapi env (unless `VAPI_ALLOW_WEBHOOKS_WHEN_READY=true`)  
@@ -36,6 +36,18 @@ Run after completing `docs/live-setup.md`.
 
 - [ ] Call/text gas smell scenario
 - [ ] Safety script + CRITICAL ticket/escalation
+
+### Social DMs (Meta + TikTok)
+
+Requires public HTTPS (`PUBLIC_APP_URL`). See `docs/social-messaging.md`.
+
+- [ ] Meta webhook GET hub challenge succeeds
+- [ ] Instagram DM appears in Conversations and (if `SOCIAL_AI_REPLIES=true`) receives a Graph reply with `/book`
+- [ ] Facebook Messenger DM uses the same webhook and inbox
+- [ ] Duplicate `mid` does not create a second thread
+- [ ] Escalation pauses AI on that thread
+- [ ] TikTok Business Messaging webhook (if approved) stores and replies via the official send API
+- [ ] Settings never shows CONNECTED without credentials
 
 ### Settings honesty
 

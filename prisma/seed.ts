@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "better-auth/crypto";
 import { addDays, addHours, subDays, subHours } from "date-fns";
+import { consultationBookingUrl } from "../src/server/email/brand";
 
 const prisma = new PrismaClient();
 
@@ -453,6 +454,21 @@ async function main() {
       content:
         "Primary email: onyxwebsystems@gmail.com. Ask to call the front desk and we will share the live number when it is configured. WhatsApp and SMS reach the same front desk thread.",
     },
+    {
+      category: "consultation",
+      title: "Consultation booking",
+      slug: "consultation-booking-url",
+      keywords: ["book", "booking", "consultation", "schedule", "calendar", "appointment", "url"],
+      content: `Book a 30-minute consultation with Onyx Web Systems at ${consultationBookingUrl()}. Do not invent other booking links, calendars, or dollar amounts.`,
+    },
+    {
+      category: "policy",
+      title: "What we do not promise",
+      slug: "what-we-do-not-promise",
+      keywords: ["guarantee", "promise", "timeline", "discount", "negotiate", "fixed price"],
+      content:
+        "We never invent prices, discounts, timelines, or features. Scope and quotes come after a consultation. If knowledge does not cover the question, hand off to a person.",
+    },
   ];
   for (const article of kb) {
     await prisma.knowledgeArticle.create({ data: { ...article, organizationId: org.id, isApproved: true } });
@@ -555,10 +571,31 @@ async function main() {
       },
       {
         organizationId: org.id,
-        key: "social",
-        name: "Social Inbox",
-        status: "SIMULATED",
-        description: "Facebook / Instagram simulated until Meta connected",
+        key: "instagram",
+        name: "Instagram DMs",
+        status: "READY_FOR_INTEGRATION",
+        description: "Meta Graph API — CONNECTED only after Page token and App Review",
+      },
+      {
+        organizationId: org.id,
+        key: "facebook",
+        name: "Facebook Messenger",
+        status: "READY_FOR_INTEGRATION",
+        description: "Same Meta app and webhook as Instagram",
+      },
+      {
+        organizationId: org.id,
+        key: "tiktok",
+        name: "TikTok DMs",
+        status: "READY_FOR_INTEGRATION",
+        description: "Official TikTok Business Messaging API (Open Beta)",
+      },
+      {
+        organizationId: org.id,
+        key: "social_ai_replies",
+        name: "Social AI replies",
+        status: "CONNECTED",
+        description: "SOCIAL_AI_REPLIES env — off stores DMs without sending Graph/TikTok replies",
       },
       {
         organizationId: org.id,

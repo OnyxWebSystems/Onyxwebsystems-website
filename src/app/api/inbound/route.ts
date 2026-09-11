@@ -6,7 +6,7 @@ import { processInbound } from "@/server/orchestration/process";
 import { getDemoOrganization } from "@/server/demo/runner";
 
 const schema = z.object({
-  channel: z.enum(["phone", "whatsapp", "email", "sms", "facebook", "instagram", "chat"]),
+  channel: z.enum(["phone", "whatsapp", "email", "sms", "facebook", "instagram", "tiktok", "chat"]),
   text: z.string().min(1).max(5000),
   from: z.string().optional().nullable(),
   email: z.string().optional().nullable(),

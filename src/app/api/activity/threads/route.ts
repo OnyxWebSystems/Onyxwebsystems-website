@@ -9,7 +9,12 @@ export async function GET(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const take = Math.min(100, Math.max(1, Number(new URL(req.url).searchParams.get("limit")) || 40));
+  const sp = new URL(req.url).searchParams;
   const org = await getDemoOrganization();
-  const threads = await listActivityThreads(org.id, take);
+  const threads = await listActivityThreads(org.id, take, {
+    channel: sp.get("channel"),
+    status: sp.get("status"),
+    q: sp.get("q"),
+  });
   return NextResponse.json({ threads });
 }

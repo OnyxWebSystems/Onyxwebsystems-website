@@ -23,6 +23,10 @@ export function dashboardSiteUrl() {
   ).replace(/\/$/, "");
 }
 
+export function consultationBookingUrl() {
+  return `${publicSiteUrl()}/book`;
+}
+
 export function emailCardsUrl() {
   return `${publicSiteUrl()}/brand/onyx-email-cards.png`;
 }

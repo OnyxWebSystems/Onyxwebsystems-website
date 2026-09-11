@@ -16,7 +16,10 @@ const LABELS: Record<string, string> = {
   google_calendar: "Google Calendar (Onyx Web Systems)",
   crm: "Internal CRM",
   llm: "Language understanding",
-  social: "Social inbox",
+  instagram: "Instagram DMs (Meta)",
+  facebook: "Facebook Messenger (Meta)",
+  tiktok: "TikTok DMs (Business Messaging API)",
+  social_ai_replies: "Social AI replies",
 };
 
 const GOOGLE_MESSAGES: Record<string, string> = {
@@ -80,6 +83,14 @@ export default async function SettingsPage({
           <li>
             <span className="font-medium text-[var(--ink)]">SMS</span> — text{" "}
             {smsFrom ? formatPhone(smsFrom) : "(set TWILIO_SMS_FROM)"}
+          </li>
+          <li>
+            <span className="font-medium text-[var(--ink)]">Instagram / Facebook / TikTok</span> — DMs land in{" "}
+            <Link href="/dashboard/conversations" className="text-[var(--accent-strong)] underline">
+              Conversations
+            </Link>{" "}
+            when Meta or TikTok credentials are CONNECTED. Localhost cannot receive those webhooks; use{" "}
+            <code>PUBLIC_APP_URL</code>. Setup: <code>docs/social-messaging.md</code>
           </li>
           <li>
             Confirm the appointment appears under{" "}

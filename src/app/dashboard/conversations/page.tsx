@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ThreadCard, ThreadDetailPanel } from "@/components/dashboard/thread-detail";
@@ -10,13 +11,15 @@ function ConversationsInner() {
   const [threads, setThreads] = useState<ThreadListItem[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ThreadDetail | null>(null);
+  const searchParams = useSearchParams();
 
   const refresh = useCallback(async () => {
-    const res = await fetch("/api/activity/threads");
+    const qs = searchParams.toString();
+    const res = await fetch(`/api/activity/threads${qs ? `?${qs}` : ""}`);
     if (!res.ok) return;
     const data = (await res.json()) as { threads: ThreadListItem[] };
     setThreads(data.threads ?? []);
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     void refresh();

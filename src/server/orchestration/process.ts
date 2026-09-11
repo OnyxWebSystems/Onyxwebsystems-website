@@ -4,14 +4,17 @@ import { logger } from "@/server/logger";
 import {
   addTimelineEvent,
   createCustomer,
+  ensureCustomerIdentity,
+  findCustomerByIdentity,
   findCustomerByPhoneOrEmail,
   updateCustomerName,
 } from "@/server/domain/customers";
 import { createTicket } from "@/server/domain/tickets";
 import { ESCALATE_UNKNOWN, formatKbAnswer, searchKnowledge } from "@/server/domain/knowledge";
 import { bookAppointment, listAvailableSlots, rescheduleAppointment } from "@/server/booking/engine";
-import { extractNlu, type NluResult } from "@/server/llm/nlu";
-import { composeMessagingReply } from "@/server/llm/compose-reply";
+import { extractNlu, isSocialQualifiedLanguage, volunteeredBusinessNote, type NluResult } from "@/server/llm/nlu";
+import { composeMessagingReply, composeSocialReply } from "@/server/llm/compose-reply";
+import { consultationBookingUrl } from "@/server/email/brand";
 import { classifyUrgency } from "@/server/rules/urgency";
 import { routeRequest } from "@/server/rules/routing";
 import { isBusinessOpen } from "@/server/domain/hours";
@@ -24,16 +27,21 @@ import {
   isConfirm,
   isMessagingChannel,
   isPlaceholderName,
+  isSocialChannel,
+  isThreadChannel,
   MENU,
   menuChoice,
   nameFromProfile,
   parsePersonName,
+  socialAiRepliesEnabled,
+  socialBookingReply,
+  socialGreeting,
   type PendingSlot,
 } from "@/server/messaging/front-desk";
 
 export type InboundMessage = {
   organizationId: string;
-  channel: "phone" | "whatsapp" | "email" | "sms" | "facebook" | "instagram" | "chat";
+  channel: "phone" | "whatsapp" | "email" | "sms" | "facebook" | "instagram" | "tiktok" | "chat";
   text: string;
   from?: string | null;
   email?: string | null;
@@ -45,10 +53,12 @@ export type InboundMessage = {
   /** When true, CallSession is marked live (Vapi). */
   isLiveChannel?: boolean;
   /**
-   * When true, also REST-send SMS/WhatsApp reply via Twilio.
-   * Leave false for Twilio inbound webhooks that reply with TwiML.
+   * When true, also REST-send SMS/WhatsApp/social reply via the channel adapter.
+   * Leave false for inbound webhooks that send after processInbound.
    */
   dispatchLiveOutbound?: boolean;
+  /** TikTok conversation_id (and similar provider thread ids). */
+  providerThreadId?: string | null;
 };
 
 export type ProcessResult = {
@@ -81,6 +91,7 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
   const org = await getOrg(input.organizationId);
   const afterHours = input.simulateAfterHours ?? !isBusinessOpen(org.businessHours as never);
   const messaging = isMessagingChannel(input.channel);
+  const social = isSocialChannel(input.channel);
 
   await publishActivity({
     organizationId: input.organizationId,
@@ -92,7 +103,9 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
   });
   actions.push(input.isMissedCall ? "missed_call_detected" : "inbound_received");
 
-  let customer = await findCustomerByPhoneOrEmail(input.organizationId, input.from, input.email);
+  let customer = social && input.from
+    ? await findCustomerByIdentity(input.organizationId, input.channel, input.from)
+    : await findCustomerByPhoneOrEmail(input.organizationId, input.from, input.email);
   const isExisting = Boolean(customer);
   const profileName = nameFromProfile(input.customerName);
 
@@ -101,14 +114,18 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
       organizationId: input.organizationId,
       firstName: profileName?.firstName || "New",
       lastName: profileName?.lastName || (profileName ? "" : "Customer"),
-      phone: input.from,
+      phone: social ? null : input.from,
       email: input.email,
       customerType: "lead",
       channel: input.channel,
+      socialIdentity: social && input.from ? { channel: input.channel, value: input.from } : null,
     });
     actions.push("customer_created");
   } else {
     actions.push("customer_identified");
+    if (social && input.from) {
+      await ensureCustomerIdentity(customer.id, input.channel, input.from);
+    }
     if (profileName && isPlaceholderName(customer.firstName, customer.lastName)) {
       customer = await updateCustomerName(customer.id, profileName.firstName, profileName.lastName);
       actions.push("customer_name_from_profile");
@@ -118,6 +135,7 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
       type: "customer_identified",
       title: "Customer identified",
       detail: `${customer.firstName} ${customer.lastName}`.trim(),
+      metadata: { channel: input.channel },
     });
   }
 
@@ -161,11 +179,27 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
     actions,
     isExisting,
     messaging,
+    social,
     history,
     departmentSlug: "support",
     intent: "unknown",
     urgency: "NORMAL",
   };
+
+  if (social && conversation.status === "escalated") {
+    actions.push("ai_paused_escalated");
+    logger.info("Inbound stored; AI paused on escalated social thread", { conversationId: conversation.id });
+    return {
+      conversationId: conversation.id,
+      customerId: customer.id,
+      reply: "",
+      urgency: conversation.urgency,
+      intent: conversation.intent ?? "unknown",
+      departmentSlug: "support",
+      afterHours,
+      actions,
+    };
+  }
 
   if (messaging) {
     const named = await maybeCaptureName(ctx);
@@ -180,11 +214,11 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
 
   const nlu = await extractNlu(input.text);
   const lowerText = input.text.toLowerCase();
-  if (messaging && /^(hi|hello|hey|hiya|good (morning|afternoon|evening))[\s!.]*$/i.test(input.text.trim())) {
+  if ((messaging || social) && /^(hi|hello|hey|hiya|good (morning|afternoon|evening))[\s!.]*$/i.test(input.text.trim())) {
     nlu.intent = "greeting";
     nlu.confidence = Math.max(nlu.confidence, 0.9);
   } else if (
-    messaging &&
+    (messaging || social) &&
     /price|pricing|prices|cost|how much|fee|fees/.test(lowerText) &&
     !/book|consult|schedule|appointment|discovery/.test(lowerText)
   ) {
@@ -228,24 +262,52 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
     title: `Intent: ${nlu.intent}`,
     detail: `Urgency ${urgency.level} → ${routing.departmentSlug}`,
     severity: urgency.level === "CRITICAL" ? "critical" : urgency.level === "HIGH" ? "warning" : "info",
+    metadata: { channel: input.channel },
   });
 
+  if (social) {
+    const leadId = await upsertSocialLead(ctx, nlu);
+    if (leadId) ctx.leadId = leadId;
+    await maybeCaptureVolunteeredNotes(ctx);
+  }
+
   const forceEscalate =
-    urgency.requiresEscalation &&
-    (urgency.level === "CRITICAL" || nlu.intent === "complaint" || nlu.intent === "human_request" || nlu.intent === "emergency");
+    (urgency.requiresEscalation &&
+      (urgency.level === "CRITICAL" || nlu.intent === "complaint" || nlu.intent === "human_request" || nlu.intent === "emergency")) ||
+    (social && /discount|special (price|deal)|cheaper|negotiate/.test(lowerText));
 
   if (forceEscalate) {
     return escalateToHuman(ctx, {
       nlu,
       departmentId: department?.id,
-      reason: urgency.matchedRule ?? nlu.intent,
+      reason: /discount|special (price|deal)|cheaper|negotiate/.test(lowerText)
+        ? "unauthorized_negotiation"
+        : urgency.matchedRule ?? nlu.intent,
       safetyScript: urgency.safetyScript,
       internalNotes: urgency.reasons.join("; "),
     });
   }
 
+  if (social && !socialAiRepliesEnabled()) {
+    actions.push("social_ai_replies_disabled");
+    return {
+      conversationId: conversation.id,
+      customerId: customer.id,
+      reply: "",
+      urgency: urgency.level,
+      intent: nlu.intent,
+      departmentSlug: routing.departmentSlug,
+      leadId: ctx.leadId,
+      afterHours,
+      actions,
+    };
+  }
+
   if (nlu.intent === "greeting") {
-    return finishReply(ctx, withNamePrompt(greetingText(customer.firstName), customer, history.length), "greeting");
+    const greeting = social
+      ? socialGreeting(customer.firstName)
+      : withNamePrompt(greetingText(customer.firstName), customer, history.length);
+    return finishReply(ctx, greeting, "greeting");
   }
 
   if (nlu.intent === "faq" || nlu.intent === "sales" || nlu.intent === "support") {
@@ -257,16 +319,26 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
   }
 
   if (nlu.intent === "book_appointment") {
+    if (social) {
+      return finishReply(ctx, socialBookingReply(), "book_appointment");
+    }
     if (messaging) {
       return offerBooking(ctx, nlu);
     }
     return bookImmediately(ctx, nlu);
   }
 
-  if (messaging && (nlu.intent === "unknown" || nlu.confidence < 0.55)) {
+  if ((messaging || social) && (nlu.intent === "unknown" || nlu.confidence < 0.55)) {
     const matches = await searchKnowledge(input.organizationId, input.text);
     if (formatKbAnswer(matches[0])) {
       return answerFromKnowledge(ctx, { ...nlu, intent: "faq" });
+    }
+    if (social) {
+      return escalateToHuman(ctx, {
+        nlu: { intent: "unknown", summary: nlu.summary } as NluResult,
+        departmentId: department?.id,
+        reason: "kb_miss",
+      });
     }
     return finishReply(ctx, withNamePrompt(greetingText(customer.firstName), customer, history.length), "greeting");
   }
@@ -290,6 +362,7 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
   await prisma.message.create({
     data: { conversationId: conversation.id, direction: "outbound", senderType: "system", body: reply },
   });
+  await maybeDispatchChannelReply(input, reply, actions);
   await addTimelineEvent({
     customerId: customer.id,
     type: "ticket_created",
@@ -317,6 +390,7 @@ export async function processInbound(input: InboundMessage): Promise<ProcessResu
     intent: nlu.intent,
     departmentSlug: routing.departmentSlug,
     ticketId: ticket.id,
+    leadId: ctx.leadId,
     afterHours,
     actions,
   };
@@ -331,20 +405,22 @@ type FlowCtx = {
   actions: string[];
   isExisting: boolean;
   messaging: boolean;
+  social: boolean;
   history: { direction: string; body: string }[];
   departmentSlug: string;
   intent: string;
   urgency: string;
+  leadId?: string;
 };
 
 async function getOrCreateConversation(input: InboundMessage, customer: CustomerRow, org: Org) {
-  if (isMessagingChannel(input.channel)) {
+  if (isThreadChannel(input.channel)) {
     const existing = await prisma.conversation.findFirst({
       where: {
         organizationId: input.organizationId,
         customerId: customer.id,
         channel: input.channel,
-        status: { in: ["open", "waiting"] },
+        status: { in: ["open", "waiting", "escalated"] },
       },
       orderBy: { startedAt: "desc" },
     });
@@ -357,10 +433,12 @@ async function getOrCreateConversation(input: InboundMessage, customer: Customer
           body: input.text,
         },
       });
-      await prisma.conversation.update({
-        where: { id: existing.id },
-        data: { endedAt: null, status: existing.status === "waiting" ? "waiting" : "open" },
-      });
+      if (existing.status !== "escalated") {
+        await prisma.conversation.update({
+          where: { id: existing.id },
+          data: { endedAt: null, status: existing.status === "waiting" ? "waiting" : "open" },
+        });
+      }
       return { conversation: existing, reused: true };
     }
   }
@@ -463,8 +541,10 @@ async function answerFromKnowledge(ctx: FlowCtx, nlu: Pick<NluResult, "intent" |
   const department = ctx.org.departments.find((d) => d.slug === ctx.departmentSlug);
 
   if (!kb) {
-    if (ctx.messaging) {
-      const draft = `I want to make sure I give you the right answer. ${frontDeskLine()}`;
+    if (ctx.messaging || ctx.social) {
+      const draft = ctx.social
+        ? "I want to make sure I give you the right answer. I'll connect you with a person on the team."
+        : `I want to make sure I give you the right answer. ${frontDeskLine()}`;
       const reply = await refine(ctx, draft, matches.map((m) => m.content));
       return escalateToHuman(ctx, {
         nlu: { intent: "unknown", summary: nlu.summary } as NluResult,
@@ -508,10 +588,13 @@ async function answerFromKnowledge(ctx: FlowCtx, nlu: Pick<NluResult, "intent" |
     };
   }
 
-  const draft = `${kb}\n\nIf you'd like, I can book a consultation (reply 3) or ${frontDeskLine().replace(/^You can also /, "")}`;
-  const reply = ctx.messaging
-    ? withNamePrompt(await refine(ctx, draft, matches.map((m) => m.content)), ctx.customer, ctx.history.length)
-    : kb;
+  const draft = ctx.social
+    ? `${kb}\n\nIf you'd like a consultation, you can book here: ${consultationBookingUrl()}`
+    : `${kb}\n\nIf you'd like, I can book a consultation (reply 3) or ${frontDeskLine().replace(/^You can also /, "")}`;
+  const reply =
+    ctx.messaging || ctx.social
+      ? withNamePrompt(await refine(ctx, draft, matches.map((m) => m.content)), ctx.customer, ctx.history.length)
+      : kb;
 
   await prisma.message.create({
     data: { conversationId: ctx.conversationId, direction: "outbound", senderType: "system", body: reply },
@@ -529,7 +612,9 @@ async function answerFromKnowledge(ctx: FlowCtx, nlu: Pick<NluResult, "intent" |
     type: "faq",
     title: "FAQ answered",
     detail: matches[0]?.title,
+    metadata: { channel: ctx.input.channel },
   });
+  await maybeDispatchChannelReply(ctx.input, reply, ctx.actions);
 
   return {
     conversationId: ctx.conversationId,
@@ -538,12 +623,24 @@ async function answerFromKnowledge(ctx: FlowCtx, nlu: Pick<NluResult, "intent" |
     urgency: ctx.urgency,
     intent: nlu.intent,
     departmentSlug: ctx.departmentSlug,
+    leadId: ctx.leadId,
     afterHours: ctx.afterHours,
     actions: ctx.actions,
   };
 }
 
 async function refine(ctx: FlowCtx, draft: string, kbSnippets: string[]) {
+  if (ctx.social) {
+    return composeSocialReply({
+      draft,
+      customerName: isPlaceholderName(ctx.customer.firstName, ctx.customer.lastName)
+        ? null
+        : ctx.customer.firstName,
+      userText: ctx.input.text,
+      kbSnippets,
+      history: ctx.history,
+    });
+  }
   if (!ctx.messaging) return draft;
   return composeMessagingReply({
     draft,
@@ -888,8 +985,11 @@ async function escalateToHuman(
     title: "Human escalation",
     detail: `${ctx.customer.firstName} ${ctx.customer.lastName} — ${ctx.urgency}`,
     severity: "critical",
+    metadata: { channel: ctx.input.channel },
   });
   ctx.actions.push("escalated", "ticket_created");
+
+  await maybeDispatchChannelReply(ctx.input, reply, ctx.actions);
 
   return {
     conversationId: ctx.conversationId,
@@ -900,6 +1000,7 @@ async function escalateToHuman(
     departmentSlug: ctx.departmentSlug,
     ticketId: ticket.id,
     escalationId: escalation.id,
+    leadId: ctx.leadId,
     afterHours: ctx.afterHours,
     actions: ctx.actions,
   };
@@ -917,6 +1018,7 @@ async function finishReply(ctx: FlowCtx, reply: string, intent: string): Promise
     urgency: ctx.urgency,
     intent,
     departmentSlug: ctx.departmentSlug,
+    leadId: ctx.leadId,
     afterHours: ctx.afterHours,
     actions: ctx.actions,
   };
@@ -1049,17 +1151,87 @@ async function maybeDispatchChannelReply(
 ) {
   if (!input.dispatchLiveOutbound) return;
   if (!input.from) return;
-  if (input.channel !== "whatsapp" && input.channel !== "sms") return;
+  if (!reply.trim()) return;
+  const live =
+    input.channel === "whatsapp" ||
+    input.channel === "sms" ||
+    input.channel === "instagram" ||
+    input.channel === "facebook" ||
+    input.channel === "tiktok";
+  if (!live) return;
+  if (isSocialChannel(input.channel) && !socialAiRepliesEnabled()) {
+    actions.push("social_ai_replies_disabled");
+    return;
+  }
   try {
     const result = await sendChannelReply({
       channel: input.channel,
       to: input.from,
       body: reply,
+      providerThreadId: input.providerThreadId ?? undefined,
     });
     if (result.ok) {
       actions.push(result.simulated ? "channel_reply_simulated" : "channel_reply_sent");
+    } else {
+      actions.push("channel_reply_failed");
     }
   } catch (error) {
     logger.warn("Channel reply dispatch failed", { error: String(error) });
   }
+}
+
+async function upsertSocialLead(ctx: FlowCtx, nlu: NluResult) {
+  const existing = await prisma.lead.findFirst({
+    where: {
+      organizationId: ctx.input.organizationId,
+      customerId: ctx.customer.id,
+      source: ctx.input.channel,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  const qualified = isSocialQualifiedLanguage(ctx.input.text, nlu);
+  const summary = nlu.summary || `${ctx.input.channel} DM`;
+  if (!existing) {
+    const lead = await prisma.lead.create({
+      data: {
+        organizationId: ctx.input.organizationId,
+        customerId: ctx.customer.id,
+        source: ctx.input.channel,
+        stage: qualified ? "qualified" : "new",
+        urgency: ctx.urgency,
+        summary,
+      },
+    });
+    ctx.actions.push(qualified ? "lead_qualified" : "lead_captured");
+    await publishActivity({
+      organizationId: ctx.input.organizationId,
+      type: "lead",
+      title: qualified ? "Social lead qualified" : "Social lead captured",
+      detail: summary,
+      metadata: { channel: ctx.input.channel },
+    });
+    return lead.id;
+  }
+  if (qualified && existing.stage === "new") {
+    await prisma.lead.update({
+      where: { id: existing.id },
+      data: { stage: "qualified", summary, urgency: ctx.urgency },
+    });
+    ctx.actions.push("lead_qualified");
+  }
+  return existing.id;
+}
+
+async function maybeCaptureVolunteeredNotes(ctx: FlowCtx) {
+  const note = volunteeredBusinessNote(ctx.input.text);
+  if (!note) return;
+  const current = ctx.customer.notes?.trim();
+  if (current?.includes(note)) return;
+  const next = current ? `${current}\nBusiness: ${note}` : `Business: ${note}`;
+  ctx.customer = await prisma.customer.update({
+    where: { id: ctx.customer.id },
+    data: { notes: next },
+    include: { identities: true },
+  });
+  ctx.actions.push("customer_notes_updated");
 }

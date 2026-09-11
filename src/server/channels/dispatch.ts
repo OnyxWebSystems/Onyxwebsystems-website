@@ -4,6 +4,9 @@ import { logger } from "@/server/logger";
 import type { ChannelStatus } from "./types";
 import { notifyConsultationBooked } from "@/server/email/notifications";
 import { isGoogleCalendarConfigured } from "@/server/calendar/google";
+import { isMetaConfigured, sendMetaMessage } from "./meta";
+import { isTikTokConfigured, sendTikTokMessage } from "./tiktok";
+import { socialAiRepliesEnabled } from "@/server/messaging/front-desk";
 
 function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
@@ -22,6 +25,7 @@ export async function sendChannelReply(input: {
   to: string;
   body: string;
   from?: string;
+  providerThreadId?: string;
 }) {
   if (input.channel === "phone") {
     return { ok: true, simulated: false, skipped: true as const, reason: "voice_reply_via_retell" };
@@ -52,6 +56,30 @@ export async function sendChannelReply(input: {
       body: input.body,
     });
     return { ...result, skipped: false as const };
+  }
+
+  if (input.channel === "instagram" || input.channel === "facebook") {
+    const result = await sendMetaMessage({ to: input.to, body: input.body });
+    logger.info("Meta channel reply dispatched", {
+      channel: input.channel,
+      ok: result.ok,
+      reason: "reason" in result ? result.reason : undefined,
+      providerId: "providerId" in result ? result.providerId : undefined,
+    });
+    return result;
+  }
+
+  if (input.channel === "tiktok") {
+    const result = await sendTikTokMessage({
+      conversationId: input.providerThreadId || input.to,
+      body: input.body,
+    });
+    logger.info("TikTok channel reply dispatched", {
+      ok: result.ok,
+      reason: "reason" in result ? result.reason : undefined,
+      providerId: "providerId" in result ? result.providerId : undefined,
+    });
+    return result;
   }
 
   logger.warn("No outbound adapter for channel", { channel: input.channel });
@@ -140,9 +168,29 @@ export function getLiveIntegrationStatuses(): Record<
       status: process.env.OPENAI_API_KEY ? "CONNECTED" : "SIMULATED",
       detail: process.env.OPENAI_API_KEY ? "OpenAI NLU" : "Fixture NLU (no OPENAI_API_KEY)",
     },
-    social: {
-      status: "SIMULATED",
-      detail: "Social inbox not live in this pivot",
+    instagram: {
+      status: isMetaConfigured() ? "CONNECTED" : "READY_FOR_INTEGRATION",
+      detail: isMetaConfigured()
+        ? "Meta Graph API (Instagram Messaging)"
+        : "Set META_APP_SECRET, META_VERIFY_TOKEN, META_PAGE_ACCESS_TOKEN (App Review required for production)",
+    },
+    facebook: {
+      status: isMetaConfigured() ? "CONNECTED" : "READY_FOR_INTEGRATION",
+      detail: isMetaConfigured()
+        ? "Meta Graph API (Messenger)"
+        : "Same Meta app as Instagram — Page token + webhook at /api/webhooks/meta",
+    },
+    tiktok: {
+      status: isTikTokConfigured() ? "CONNECTED" : "READY_FOR_INTEGRATION",
+      detail: isTikTokConfigured()
+        ? "TikTok Business Messaging API"
+        : "Official Open Beta only — Business Account + TIKTOK_ACCESS_TOKEN. Personal accounts are not supported.",
+    },
+    social_ai_replies: {
+      status: socialAiRepliesEnabled() ? "CONNECTED" : "READY_FOR_INTEGRATION",
+      detail: socialAiRepliesEnabled()
+        ? "Auto-replies enabled for Instagram, Facebook, and TikTok DMs"
+        : "SOCIAL_AI_REPLIES=false — DMs are stored and can escalate; Graph/TikTok replies are not sent",
     },
   };
 }

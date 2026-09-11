@@ -25,8 +25,9 @@ const DEFAULT_CHANNELS = [
   { value: "whatsapp", label: "WhatsApp" },
   { value: "sms", label: "SMS" },
   { value: "email", label: "Email" },
-  { value: "facebook", label: "Social (FB)" },
-  { value: "instagram", label: "Social (IG)" },
+  { value: "facebook", label: "Facebook" },
+  { value: "instagram", label: "Instagram" },
+  { value: "tiktok", label: "TikTok" },
   { value: "chat", label: "Chat" },
   { value: "website", label: "Website" },
 ];

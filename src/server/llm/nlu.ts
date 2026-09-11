@@ -128,6 +128,15 @@ export function fixtureNlu(text: string): NluResult {
     });
   }
 
+  if (isSalesLanguage(lower) && !/book|consult|schedule|appointment|discovery/.test(lower)) {
+    return emptySlots({
+      intent: "sales",
+      confidence: 0.86,
+      serviceHint: serviceHintFrom(text),
+      summary: salesSummary(text),
+    });
+  }
+
   if (/bill|invoice|payment|charge/.test(lower)) {
     return emptySlots({
       intent: "billing",
@@ -165,6 +174,31 @@ function extractZip(text: string) {
   return m ? m[1] : null;
 }
 
+function isSalesLanguage(lower: string) {
+  return /hvac|operating system|business operating|need a (website|app|system)|we (need|want) a (website|app|system)|custom (app|site|system|software)/.test(
+    lower,
+  );
+}
+
+function salesSummary(text: string) {
+  const lower = text.toLowerCase();
+  if (/hvac/.test(lower)) return "HVAC / company sales enquiry";
+  if (/operating system|bos|business operating/.test(lower)) return "Business Operating System sales enquiry";
+  if (/website|web/.test(lower)) return "Website sales enquiry";
+  if (/app/.test(lower)) return "App development sales enquiry";
+  return "Inbound sales enquiry";
+}
+
+export function isSocialQualifiedLanguage(text: string, nlu: Pick<NluResult, "intent" | "summary">) {
+  if (nlu.intent === "sales" || nlu.intent === "book_appointment") return true;
+  return isSalesLanguage(text.toLowerCase());
+}
+
+export function volunteeredBusinessNote(text: string) {
+  const match = text.match(/\b(?:my|our)\s+(?:company|business|shop)\s+(?:is|are)\s+([^.!?\n]{2,80})/i);
+  return match?.[1]?.trim() || null;
+}
+
 const ONYX_NLU_PROMPT = `You classify inbound messages for Onyx Web Systems, a technology partner for Business Operating Systems (BOS), App Development, and Web Development.
 
 Return JSON with keys: intent, confidence, serviceHint, urgencyHints, customerName, address, postalCode, hasVulnerableOccupant, systemFullyDown, outdoorTempF, summary.
@@ -177,6 +211,7 @@ Rules:
 - quote alone is not an instant book
 - book / consult / schedule / discovery call → book_appointment
 - sales or support questions that are not an explicit booking request → sales or support (do not use book_appointment)
+- website + operating system, HVAC / company needing a system, custom app or BOS language → sales
 - speak to a person / human / manager → human_request
 - Never invent prices or company policy facts
 - serviceHint when relevant: consultation, app-discovery, web-kickoff, bos-workshop`;

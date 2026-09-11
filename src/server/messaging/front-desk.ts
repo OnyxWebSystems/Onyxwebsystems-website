@@ -1,4 +1,5 @@
 import { formatPhone } from "@/lib/utils";
+import { consultationBookingUrl } from "@/server/email/brand";
 
 export const MENU = `How can I help?
 1) Services
@@ -63,6 +64,27 @@ export function menuChoice(text: string): 1 | 2 | 3 | 4 | 5 | null {
 
 export function isMessagingChannel(channel: string) {
   return channel === "whatsapp" || channel === "sms";
+}
+
+export function isSocialChannel(channel: string) {
+  return channel === "instagram" || channel === "facebook" || channel === "tiktok";
+}
+
+export function isThreadChannel(channel: string) {
+  return isMessagingChannel(channel) || isSocialChannel(channel);
+}
+
+export function socialAiRepliesEnabled() {
+  return process.env.SOCIAL_AI_REPLIES !== "false";
+}
+
+export function socialGreeting(firstName?: string | null) {
+  const hi = firstName && !isPlaceholderName(firstName, "") ? `Hi ${firstName}` : "Hi";
+  return `${hi}, you've reached Onyx Web Systems. We build Business Operating Systems, applications, and websites around how your business actually works.\n\nIf you'd like to talk through what you need, you can book a consultation here: ${consultationBookingUrl()}`;
+}
+
+export function socialBookingReply() {
+  return `We'd love to learn more about your business. Book a 30-minute consultation with the Onyx team here: ${consultationBookingUrl()}`;
 }
 
 export const PENDING_PREFIX = "pending_book|";

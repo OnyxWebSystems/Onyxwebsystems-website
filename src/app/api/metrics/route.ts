@@ -146,7 +146,9 @@ export async function GET(req: Request) {
   const wa = conversations.filter((c) => c.channel === "whatsapp");
   const sms = conversations.filter((c) => c.channel === "sms");
   const email = conversations.filter((c) => c.channel === "email");
-  const social = conversations.filter((c) => c.channel === "facebook" || c.channel === "instagram");
+  const social = conversations.filter(
+    (c) => c.channel === "facebook" || c.channel === "instagram" || c.channel === "tiktok",
+  );
 
   return NextResponse.json({
     range: filters.range ?? "30",
@@ -197,8 +199,11 @@ export async function GET(req: Request) {
     },
     social: {
       enquiriesHandled: social.length,
-      channelSwitches: Math.floor(social.length / 3),
-      simulated: true,
+      instagram: social.filter((c) => c.channel === "instagram").length,
+      facebook: social.filter((c) => c.channel === "facebook").length,
+      tiktok: social.filter((c) => c.channel === "tiktok").length,
+      channelSwitches: 0,
+      simulated: social.length === 0,
     },
     resolvedConversations,
   });

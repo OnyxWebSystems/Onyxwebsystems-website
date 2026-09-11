@@ -18,6 +18,12 @@ describe("fixtureNlu", () => {
     expect(fixtureNlu("quote").intent).not.toBe("book_appointment");
   });
 
+  it("maps website + operating system language to sales", () => {
+    const nlu = fixtureNlu("We're an HVAC company and need a website and operating system");
+    expect(nlu.intent).toBe("sales");
+    expect(nlu.summary.toLowerCase()).toMatch(/hvac|operating/);
+  });
+
   it("books when they explicitly ask to book", () => {
     expect(fixtureNlu("Can we book a discovery call for app development?").intent).toBe(
       "book_appointment",
