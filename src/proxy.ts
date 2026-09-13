@@ -7,7 +7,7 @@ function dashboardOrigin() {
   return (process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://dashboard.onyxwebsystems.co.za").replace(/\/$/, "");
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const host = req.headers.get("host")?.split(":")[0]?.toLowerCase() ?? "";
   const { pathname, search } = req.nextUrl;
 
