@@ -114,6 +114,8 @@ model Organization {
   activityEvents ActivityEvent[]
   followUps     FollowUp[]
   demoRuns      DemoRun[]
+  partners      Partner[]
+  partnerSettings PartnerEngineSettings?
 }
 
 // ─── Staff ────────────────────────────────────────────────────────
@@ -568,4 +570,171 @@ model DemoRun {
   startedAt      DateTime @default(now())
   completedAt    DateTime?
   metadata       Json?
+}
+
+// ─── Partner Engine ───────────────────────────────────────────────
+
+model Partner {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  companyName    String
+  website        String?
+  websiteDomain  String?
+  industry       String?
+  subIndustry    String?
+  category       String   @default("Professional Services Firms")
+  country        String?
+  province       String?
+  city           String?
+  description    String?
+  companySize    String?
+  estimatedRevenueCents Int?
+  targetClientDescription String?
+  targetClientSize String?
+  targetIndustries String[]
+  keywords       String[]
+
+  linkedinUrl    String?
+  instagramUrl   String?
+  facebookUrl    String?
+  contactPageUrl String?
+
+  primaryContactName String?
+  primaryContactRole String?
+  primaryContactEmail String?
+  primaryContactPhone String?
+  primaryContactLinkedin String?
+
+  partnerScore         Int @default(0)
+  clientValueScore     Int @default(0)
+  fitScore             Int @default(0)
+  relationshipScore    Int @default(0)
+  networkScore         Int @default(0)
+  technologyGapScore   Int @default(0)
+  competitionRiskScore Int @default(0)
+  scoreBreakdown       Json?
+
+  recommendedServices String[]
+  whyGoodFit          String?
+  potentialClientProfile String?
+  recommendedPitch    String?
+  recommendedAction   String?
+  partnershipAngle    String?
+
+  status         String   @default("DISCOVERED") // DISCOVERED | RESEARCHING | QUALIFIED | AWAITING_APPROVAL | APPROVED | CONTACTED | FOLLOW_UP | RESPONDED | INTERESTED | MEETING_BOOKED | NEGOTIATING | ACTIVE_PARTNER | NOT_INTERESTED | UNQUALIFIED | ARCHIVED
+  partnerType    String   @default("REFERRAL") // REFERRAL | TECHNOLOGY | STRATEGIC
+  contractStatus String   @default("NOT_SENT") // NOT_SENT | SENT | SIGNED | ACTIVE
+  source         String   @default("manual")
+  sourceUrl      String?
+  doNotContact   Boolean  @default(false)
+  tags           String[]
+
+  lastResearchedAt DateTime?
+  nextResearchAt   DateTime?
+  lastContactedAt  DateTime?
+  nextFollowUpAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  research  PartnerResearch[]
+  outreach  PartnerOutreach[]
+  notes     PartnerNote[]
+  activity  PartnerActivity[]
+
+  @@unique([organizationId, websiteDomain])
+  @@index([organizationId, status])
+  @@index([organizationId, partnerScore])
+  @@index([organizationId, category])
+  @@index([organizationId, companyName])
+}
+
+model PartnerResearch {
+  id        String   @id @default(cuid())
+  partnerId String
+  partner   Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  findings  Json
+  createdAt DateTime @default(now())
+  sources   PartnerResearchSource[]
+
+  @@index([partnerId, createdAt])
+}
+
+model PartnerResearchSource {
+  id         String   @id @default(cuid())
+  researchId String
+  research   PartnerResearch @relation(fields: [researchId], references: [id], onDelete: Cascade)
+  sourceName String
+  sourceUrl  String
+  sourceType String
+  snippet    String?
+  retrievedAt DateTime @default(now())
+
+  @@index([researchId])
+}
+
+model PartnerOutreach {
+  id         String   @id @default(cuid())
+  partnerId  String
+  partner    Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  channel    String   @default("EMAIL") // EMAIL | LINKEDIN | PHONE | WEBSITE_CONTACT | REFERRAL_INTRO | OTHER
+  subject    String?
+  message    String
+  status     String   @default("DRAFT") // DRAFT | AWAITING_APPROVAL | APPROVED | READY | SENT | CANCELLED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  approvedAt DateTime?
+  approvedById String?
+  sentAt     DateTime?
+  sentById   String?
+  responseReceived Boolean @default(false)
+  responseAt DateTime?
+  responseType String?
+  notes      String?
+
+  @@index([partnerId, createdAt])
+  @@index([status])
+}
+
+model PartnerNote {
+  id          String   @id @default(cuid())
+  partnerId   String
+  partner     Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  body        String
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([partnerId, createdAt])
+}
+
+model PartnerActivity {
+  id          String   @id @default(cuid())
+  partnerId   String
+  partner     Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  type        String
+  title       String
+  detail      String?
+  actorId     String?
+  createdAt   DateTime @default(now())
+
+  @@index([partnerId, createdAt])
+}
+
+model PartnerEngineSettings {
+  id             String   @id @default(cuid())
+  organizationId String   @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  scoringWeights Json
+  defaultCommissionBps Int @default(1000)
+  minProjectValueCents Int @default(400000)
+  categories     String[]
+  onyxServices   String[]
+  outreachTemplates Json?
+  followUpTemplates Json?
+  minPartnerScore Int @default(70)
+  minClientValueScore Int @default(70)
+  cookieDurationDays Int @default(90)
+  updatedAt      DateTime @updatedAt
 }

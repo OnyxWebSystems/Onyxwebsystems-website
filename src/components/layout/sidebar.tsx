@@ -13,6 +13,7 @@ import {
   Activity,
   LogOut,
   BarChart3,
+  Handshake,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
@@ -23,6 +24,7 @@ const links = [
   { href: "/dashboard/conversations", label: "Conversations", icon: MessagesSquare },
   { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
+  { href: "/dashboard/partners", label: "Partner Engine", icon: Handshake },
   { href: "/dashboard/appointments", label: "Appointments", icon: CalendarDays },
   { href: "/dashboard/tickets", label: "Tickets", icon: Ticket },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
