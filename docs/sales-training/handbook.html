@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>onyxwebsystems — Salesperson training</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    @font-face {
+      font-family: Syne;
+      src: url("./fonts/Syne.ttf") format("truetype");
+      font-weight: 600 800;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Plus Jakarta Sans";
+      src: url("./fonts/PlusJakartaSans.ttf") format("truetype");
+      font-weight: 400 800;
+      font-style: normal;
+      font-display: swap;
+    }
+    :root {
+      --ink: #0a0a0a;
+      --muted: #5c5c5c;
+      --paper: #ffffff;
+      --wash: #f7f7f5;
+      --line: #0a0a0a;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.5;
+    }
+    .page {
+      position: relative;
+      page-break-after: always;
+      break-after: page;
+      overflow: hidden;
+    }
+    .grid {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      opacity: 0.035;
+      background-image:
+        linear-gradient(#000 1px, transparent 1px),
+        linear-gradient(90deg, #000 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .mast {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--ink);
+      padding: 10pt 0 9pt;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8pt;
+    }
+    .brand-name {
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      font-size: 11pt;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .cards { width: 16pt; height: 16pt; display: block; }
+    .mast-meta {
+      font-size: 7.5pt;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .inner { position: relative; padding: 10mm 4mm 8mm; }
+    .kicker {
+      font-size: 8pt;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      margin: 16pt 0 0;
+    }
+    h1, h2, h3 {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      margin: 0;
+      line-height: 1.05;
+    }
+    h1 { font-size: 38pt; max-width: 150mm; margin-top: 12pt; }
+    h2 { font-size: 26pt; margin-top: 8pt; max-width: 160mm; }
+    h3 { font-size: 13pt; margin: 16pt 0 6pt; }
+    p { margin: 0 0 8pt; }
+    .lead { font-size: 12.5pt; max-width: 145mm; margin-top: 14pt; color: var(--muted); }
+    .rule { height: 1px; width: 42mm; background: var(--ink); margin: 14pt 0 16pt; }
+    .cover-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 12pt;
+      border-top: 1px solid var(--ink);
+      margin-top: 28pt;
+      padding-top: 10pt;
+      font-size: 8pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    ul, ol { margin: 0 0 10pt; padding-left: 16pt; }
+    li { margin: 0 0 4pt; }
+    table { width: 100%; border-collapse: collapse; margin: 10pt 0 12pt; font-size: 9.5pt; }
+    th, td { border: 1px solid var(--ink); padding: 8pt 9pt; text-align: left; vertical-align: top; }
+    th {
+      background: var(--ink);
+      color: #fff;
+      font-family: Syne, sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 7.5pt;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--ink); }
+    .grid-2 > * { border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 11pt 12pt; }
+    .grid-2 > *:nth-child(2n) { border-right: 0; }
+    .card-title { font-family: Syne, sans-serif; font-size: 12pt; font-weight: 700; letter-spacing: -0.03em; margin: 0 0 4pt; }
+    .muted { color: var(--muted); }
+    .band {
+      background: var(--ink);
+      color: #fff;
+      padding: 14pt 16pt;
+      margin: 12pt 0;
+    }
+    .band p { margin: 0; color: #d4d4d0; }
+    .band strong { color: #fff; }
+    .formula {
+      font-family: Syne, sans-serif;
+      font-size: 14pt;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      border: 1px solid var(--ink);
+      padding: 12pt 14pt;
+      margin: 10pt 0 14pt;
+    }
+    .editorial { display: grid; grid-template-columns: 22mm 1fr; gap: 10pt; border-top: 1px solid var(--ink); padding: 12pt 0; }
+    .editorial .n {
+      font-size: 8pt;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      padding-top: 3pt;
+    }
+    .small { font-size: 8.5pt; color: var(--muted); }
+    .module-num { font-size: 8pt; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-top: 4pt; }
+    .photos { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--ink); margin: 12pt 0; }
+    .photos figure { margin: 0; border-right: 1px solid var(--ink); }
+    .photos figure:last-child { border-right: 0; }
+    .photos img { display: block; width: 100%; height: 58mm; object-fit: cover; object-position: 50% 18%; }
+    .photos figcaption { border-top: 1px solid var(--ink); padding: 7pt 9pt; }
+    .photos strong { font-family: Syne, sans-serif; font-size: 10pt; }
+    .photos span { display: block; margin-top: 2pt; font-size: 7.5pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+    .quote { font-family: Syne, sans-serif; font-size: 14pt; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; margin: 12pt 0; }
+    .foot {
+      border-top: 1px solid var(--ink);
+      margin-top: 16pt;
+      padding-top: 8pt;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .dark {
+      background: var(--ink);
+      color: #fff;
+      min-height: 100%;
+    }
+    .dark .grid { opacity: 0.07; }
+    .dark .mast { border-bottom-color: rgba(255,255,255,0.2); }
+    .dark .brand-name, .dark h1, .dark h2 { color: #fff; }
+    .dark .mast-meta, .dark .kicker, .dark .lead, .dark .cover-foot { color: #a3a3a0; }
+    .dark .rule { background: #fff; }
+    .dark .cards rect { stroke: #fff; fill: #0a0a0a; }
+    .ccc { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid var(--ink); }
+    .ccc article { padding: 14pt 12pt; border-right: 1px solid var(--ink); }
+    .ccc article:last-child { border-right: 0; background: var(--ink); color: #fff; }
+    .ccc article:last-child p { color: #d4d4d0; }
+    .flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; border: 1px solid var(--ink); margin: 10pt 0 14pt; }
+    .flow div { padding: 10pt 8pt; border-right: 1px solid var(--ink); }
+    .flow div:last-child { border-right: 0; }
+    .flow span { display: block; font-size: 7.5pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+    .flow b { display: block; margin-top: 4pt; font-family: Syne, sans-serif; font-size: 9.5pt; font-weight: 700; }
+    @page { size: A4; margin: 10mm 11mm 12mm; }
+  </style>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="cards" viewBox="0 0 32 32">
+      <g transform="translate(18 17.5) rotate(-10)">
+        <rect x="-6.2" y="-8.4" width="12.4" height="16.8" rx="0.7" fill="#fff" stroke="#0a0a0a" stroke-width="1.08" transform="translate(-4.9 -3.2)"/>
+        <rect x="-6.2" y="-8.4" width="12.4" height="16.8" rx="0.7" fill="#fff" stroke="#0a0a0a" stroke-width="1.08" transform="translate(-3.7 -2.4)"/>
+        <rect x="-6.2" y="-8.4" width="12.4" height="16.8" rx="0.7" fill="#fff" stroke="#0a0a0a" stroke-width="1.08" transform="translate(-2.45 -1.6)"/>
+        <rect x="-6.2" y="-8.4" width="12.4" height="16.8" rx="0.7" fill="#fff" stroke="#0a0a0a" stroke-width="1.08" transform="translate(-1.22 -0.8)"/>
+        <rect x="-6.2" y="-8.4" width="12.4" height="16.8" rx="0.7" fill="#fff" stroke="#0a0a0a" stroke-width="1.08"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand">
+          <span class="brand-name">onyxwebsystems</span>
+          <svg class="cards"><use href="#cards"/></svg>
+        </div>
+        <span class="mast-meta">Internal · Sales training</span>
+      </div>
+      <p class="kicker">Create. Connect. Convert.</p>
+      <h1>Salesperson training</h1>
+      <p class="lead">Who we are. What we build. How each module works. How we price: 13% of the annual salary for that role, plus a monthly retainer sized to the project.</p>
+      <div class="rule"></div>
+      <p class="muted">Do not quote until you can name the job the module replaces and how big the project is.</p>
+      <div class="cover-foot">
+        <span>onyxwebsystems.co.za</span>
+        <span>Confidential · September 2026</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">Contents</span>
+      </div>
+      <p class="kicker">How to use this handbook</p>
+      <h2>Learn the company.<br>Then the modules.<br>Then the two-part price.</h2>
+      <div class="rule"></div>
+      <div class="editorial"><div class="n">01</div><div><strong>Who we are</strong><p class="muted" style="margin:4pt 0 0">Founders, philosophy, how we think.</p></div></div>
+      <div class="editorial"><div class="n">02</div><div><strong>What we sell</strong><p class="muted" style="margin:4pt 0 0">Business Operating Systems, websites, applications.</p></div></div>
+      <div class="editorial"><div class="n">03</div><div><strong>How we price</strong><p class="muted" style="margin:4pt 0 0">13% module fee + monthly retainer sized to the project.</p></div></div>
+      <div class="editorial"><div class="n">04</div><div><strong>The modules</strong><p class="muted" style="margin:4pt 0 0">What is inside each, and how work actually flows.</p></div></div>
+      <div class="editorial"><div class="n">05</div><div><strong>How you sell</strong><p class="muted" style="margin:4pt 0 0">Discovery, language, checklist.</p></div></div>
+      <div class="band">
+        <p><strong>Public line:</strong> Custom Solutions. Custom Pricing. The 13% formula and retainer logic are for conversations and proposals — not website menu prices, ads, or AI / front-desk replies.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">01 · Company</span>
+      </div>
+      <p class="kicker">Who we are</p>
+      <h2>We’re building the systems behind modern businesses.</h2>
+      <div class="rule"></div>
+      <p>Onyx Web Systems is a technology partner building Business Operating Systems, custom applications, and premium web experiences. Tagline: <strong>CREATE. CONNECT. CONVERT.</strong></p>
+      <p>Founded on <strong>16 November 2025</strong> by <strong>Sihle Nathi Simelane</strong> while studying Computer Science at Emeris. The company began with websites, then grew into the systems behind businesses.</p>
+      <p><strong>Lihle Simelane</strong> joined to grow the business — relationships, client needs, partnerships. Sihle builds the technology. Lihle grows the company.</p>
+      <p class="quote">Don’t just build what a business needs today. Build what it needs to become tomorrow.</p>
+      <div class="photos">
+        <figure>
+          <img src="../../public/about/sihle-simelane.png" alt="Sihle Nathi Simelane" />
+          <figcaption><strong>Sihle Nathi Simelane</strong><span>Founder</span></figcaption>
+        </figure>
+        <figure>
+          <img src="../../public/about/lihle-simelane.png" alt="Lihle Simelane" />
+          <figcaption><strong>Lihle Simelane</strong><span>Growth &amp; Partnerships</span></figcaption>
+        </figure>
+      </div>
+      <p class="small">Hours: Mon–Fri 09:00–17:00, Africa/Johannesburg · onyxwebsystems@gmail.com · onyxwebsystems.co.za · @onyxwebsystems</p>
+    </div>
+  </section>
+
+  <section class="page dark">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">01 · Philosophy</span>
+      </div>
+      <p class="kicker">How we think</p>
+      <h2>CREATE.<br>CONNECT.<br>CONVERT.</h2>
+      <p class="lead">Three words define how we approach technology. This isn’t just our tagline. It’s how we think — and how you sell.</p>
+      <div class="rule"></div>
+      <div class="editorial" style="border-color:rgba(255,255,255,0.2)"><div class="n" style="color:#a3a3a0">Create</div><div>We build digital experiences, applications, and systems that solve real business problems.</div></div>
+      <div class="editorial" style="border-color:rgba(255,255,255,0.2)"><div class="n" style="color:#a3a3a0">Connect</div><div>We connect people, processes, data, and technology so the different parts of a business can work together.</div></div>
+      <div class="editorial" style="border-color:rgba(255,255,255,0.2)"><div class="n" style="color:#a3a3a0">Convert</div><div>We turn complexity into efficiency, opportunities into customers, and systems into growth.</div></div>
+      <p class="lead" style="margin-top:18pt">The Onyx standard: Simple. Intelligent. Connected. Scalable. Human. Automation should empower people, not remove judgment where it matters.</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">01 · How we think</span>
+      </div>
+      <p class="kicker">Discovery</p>
+      <h2>We don’t start with technology. We start with the business.</h2>
+      <div class="rule"></div>
+      <p class="muted">If you cannot answer these, you are not ready to quote.</p>
+      <div class="grid-2" style="margin-top:12pt">
+        <div>How do leads enter?</div>
+        <div>How are customers managed?</div>
+        <div>Where is time being wasted?</div>
+        <div>What tasks are repetitive?</div>
+        <div>Where are teams losing information?</div>
+        <div>What systems are disconnected?</div>
+        <div>What could be automated?</div>
+        <div>What could be improved?</div>
+      </div>
+      <h3>How we work with a client</h3>
+      <ol>
+        <li>Discovery — understand the business</li>
+        <li>Strategy — identify opportunities</li>
+        <li>Architecture — map workflows and technology</li>
+        <li>Design — design the experience</li>
+        <li>Development — build the system</li>
+        <li>Testing — test real workflows</li>
+        <li>Launch — deploy</li>
+        <li>Optimization — keep improving</li>
+      </ol>
+      <p class="small">After a project request: review → assessment → 30-minute consultation → proposal → build. Booking does not create a delivery contract. Send people to onyxwebsystems.co.za/book.</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">02 · What we sell</span>
+      </div>
+      <p class="kicker">Three lanes</p>
+      <h2>Pick a lane — or combine them into a complete operating system.</h2>
+      <div class="rule"></div>
+      <div class="editorial"><div class="n">01</div><div><h3 style="margin-top:0">Business Operating Systems</h3><p>Connected modules that run sales, customers, finance, people, operations, and reporting as one system. We replace fragmented tools and repetitive work.</p></div></div>
+      <div class="editorial"><div class="n">02</div><div><h3 style="margin-top:0">Websites</h3><p>Premium sites that carry a brand and convert. Proof: Thrift Rotate (Pretoria streetwear) and about.secnightlife.com.</p></div></div>
+      <div class="editorial"><div class="n">03</div><div><h3 style="margin-top:0">Applications</h3><p>Custom web and mobile software shaped around how they actually operate. Proof: SEC Nightlife — events, tables, menus, tickets, hiring, payments.</p></div></div>
+      <div class="band">
+        <p><strong>Your job is not to sell “a website.”</strong> Find where people, time, and money are leaking. Sell the system that replaces that leak.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">03 · Pricing</span>
+      </div>
+      <p class="kicker">Two numbers</p>
+      <h2>Every BOS deal has two layers. Never one.</h2>
+      <div class="rule"></div>
+      <table>
+        <tr><th>Layer</th><th>What it is</th><th>How you calculate it</th></tr>
+        <tr><td>1. Module fee (13%)</td><td>Price to put that function into the operating system</td><td>13% of what that role would cost as an employee for one year</td></tr>
+        <tr><td>2. Monthly retainer</td><td>Ongoing run, improve, support, keep the system alive</td><td>Sized to how big the project is — not a flat fee, and not 13% again</td></tr>
+      </table>
+      <h3>Part 1 — The 13% module fee</h3>
+      <ol>
+        <li>Name the job the module is doing.</li>
+        <li>Get the annual salary for that seat.</li>
+        <li>Charge 13% of that annual amount.</li>
+      </ol>
+      <div class="formula">Charge = annual salary of that role × 0.13</div>
+      <div class="grid-2">
+        <div>
+          <p class="kicker" style="margin:0">Sales module</p>
+          <p class="card-title">R240,000 × 0.13 = R31,200</p>
+        </div>
+        <div>
+          <p class="kicker" style="margin:0">Finance module</p>
+          <p class="card-title">R180,000 × 0.13 = R23,400</p>
+        </div>
+      </div>
+      <p style="margin-top:12pt">Several modules: calculate 13% per module, then add. A full operating system is a stack, not a mystery lump sum.</p>
+      <div class="band">
+        <p>“Instead of hiring another person to run this all year, we put that function in the system. The module fee is 13% of what that seat would cost you annually. Then there is a monthly retainer, sized to the size of the build.”</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">03 · Retainer</span>
+      </div>
+      <p class="kicker">Monthly retainer</p>
+      <h2>Sized to how big the project is.</h2>
+      <div class="rule"></div>
+      <p>The 13% is not the whole relationship. The retainer is not 13% again. It is not the same for every client.</p>
+      <h3>What it pays for</h3>
+      <ul>
+        <li>Keeping the system live</li>
+        <li>Improving workflows as the business changes</li>
+        <li>Support when staff get stuck</li>
+        <li>Channel monitoring (WhatsApp, web, Instagram — depending on the build)</li>
+        <li>Knowledge updates and small scope that is not a new module</li>
+        <li>Reporting the client actually uses</li>
+      </ul>
+      <table>
+        <tr><th>Signal</th><th>Smaller</th><th>Bigger</th></tr>
+        <tr><td>Modules</td><td>One module</td><td>Several connected modules</td></tr>
+        <tr><td>Team</td><td>1–10 people</td><td>11–50 / 51–200 / 200+</td></tr>
+        <tr><td>Channels</td><td>One form</td><td>Phone, WhatsApp, Instagram, Facebook, email</td></tr>
+        <tr><td>Workflows</td><td>One simple path</td><td>Approvals, payments, multi-location</td></tr>
+        <tr><td>Custom</td><td>Standard module</td><td>Custom agents and specialised systems</td></tr>
+      </table>
+      <p>Small → lower monthly. Mid (two or three modules, 11–50 staff, WhatsApp + web) → mid. Large (full OS, many channels, custom) → highest. Until leadership gives exact bands, size the project correctly. Do not invent a rand amount on the call.</p>
+      <p><strong>Websites and apps</strong> are scoped, then quoted. Do not apply 13% of a designer’s salary unless leadership says so.</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">04 · Onyx OS</span>
+      </div>
+      <p class="kicker">One business. One connected system.</p>
+      <h2>Seven modules.</h2>
+      <div class="rule"></div>
+      <p>When you sell a module, always name the job it replaces (for the 13%), what is inside, and how work flows.</p>
+      <table>
+        <tr><th>#</th><th>Module</th><th>Job it replaces</th><th>Inside</th></tr>
+        <tr><td>01</td><td>Sales</td><td>Salesperson / sales admin</td><td>Capture, qualify, CRM, follow-ups, appointments, pipeline</td></tr>
+        <tr><td>02</td><td>Customer Experience</td><td>Receptionist / front desk</td><td>Communication, support, onboarding, feedback, workflows</td></tr>
+        <tr><td>03</td><td>Finance</td><td>Bookkeeper / finance admin</td><td>Invoices, payments, approvals, financial workflows</td></tr>
+        <tr><td>04</td><td>HR</td><td>HR admin / office manager</td><td>Recruitment, onboarding, employee workflows, documents</td></tr>
+        <tr><td>05</td><td>Office Operations</td><td>Office admin / coordinator</td><td>Tasks, scheduling, documents, internal admin</td></tr>
+        <tr><td>06</td><td>Reporting &amp; Analytics</td><td>Analyst / spreadsheet owner</td><td>Dashboards, KPIs, reports, performance</td></tr>
+        <tr><td>07</td><td>Custom</td><td>Specialist seat / contractor</td><td>Custom workflows, AI agents, integrations</td></tr>
+      </table>
+      <p class="small">Booking forms may show older labels (Lead Management, Marketing, Follow-Ups, Internal Comms). Map those into the seven modules so you do not sell two names for the same work.</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">Module 01</span>
+      </div>
+      <p class="module-num">Sales</p>
+      <h2>Turn more opportunities into revenue.</h2>
+      <div class="rule"></div>
+      <p><strong>13% job:</strong> salesperson, sales admin, or junior closer.</p>
+      <ul>
+        <li><strong>Lead capture</strong> — web, WhatsApp, Instagram, Facebook, forms, walk-ins. One place.</li>
+        <li><strong>Qualification</strong> — need, budget signal, timeline, team size.</li>
+        <li><strong>CRM</strong> — identity, history, notes, stage.</li>
+        <li><strong>Follow-ups</strong> — automatic and human so leads do not go cold.</li>
+        <li><strong>Appointments</strong> — book from the same thread.</li>
+        <li><strong>Pipeline</strong> — first contact to closed.</li>
+      </ul>
+      <div class="flow">
+        <div><span>01</span><b>Capture</b></div>
+        <div><span>02</span><b>Qualify</b></div>
+        <div><span>03</span><b>Follow up</b></div>
+        <div><span>04</span><b>Book</b></div>
+        <div><span>05</span><b>Convert</b></div>
+        <div><span>06</span><b>Report</b></div>
+      </div>
+      <p>Lead Management, Follow-Ups, or Sales &amp; CRM on the booking form is this module. Speed-to-lead: the business answers fast, in one system.</p>
+      <p><strong>Ask:</strong> “Who follows up leads today, and what would that person cost for the year?”</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">Module 02</span>
+      </div>
+      <p class="module-num">Customer Experience</p>
+      <h2>The digital front desk.</h2>
+      <div class="rule"></div>
+      <p><strong>13% job:</strong> receptionist, front-desk admin, or the seat that answers all day.</p>
+      <p>This is the live Onyx product: Conversations, Calendar, Customers, Appointments, Tickets, Knowledge, Live Activity.</p>
+      <ul>
+        <li><strong>Communication</strong> — one inbox: web, WhatsApp, SMS, voice, Instagram, Facebook.</li>
+        <li><strong>Support</strong> — approved knowledge; misses become tickets and a human.</li>
+        <li><strong>Onboarding</strong> — identify, create the record, next step.</li>
+        <li><strong>Feedback</strong> — what customers said, not what staff remember.</li>
+        <li><strong>Workflows</strong> — greet, hours, book, reschedule, remind, escalate. After hours it still captures and books.</li>
+      </ul>
+      <ol>
+        <li>Customer messages or calls.</li>
+        <li>System identifies them — or creates them.</li>
+        <li>Answers from knowledge, books, or captures the request.</li>
+        <li>Angry / legal / billing / safety / “a person” → handoff.</li>
+        <li>Staff see the same thread. They do not start from zero.</li>
+      </ol>
+      <p><strong>Ask:</strong> “Who answers customers all day, on which channels, and what does that seat cost per year?”</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">Modules 03–04</span>
+      </div>
+      <p class="module-num">Finance</p>
+      <h2>Money in. Money out. A clean trail.</h2>
+      <div class="rule"></div>
+      <p><strong>13% job:</strong> bookkeeper, finance admin, or the owner invoicing at midnight.</p>
+      <ul>
+        <li><strong>Invoices</strong> — create, send, paid vs overdue.</li>
+        <li><strong>Payments</strong> — tied to the customer and the job.</li>
+        <li><strong>Approvals</strong> — spend, discount, refund, payout follows a path.</li>
+        <li><strong>Workflows</strong> — quote → invoice → payment → receipt → reminder.</li>
+        <li><strong>Reporting</strong> — in, outstanding, stuck in approval.</li>
+      </ul>
+      <p><strong>Ask:</strong> “Who chases invoices today? What would that person cost for a year?”</p>
+      <p class="module-num">HR</p>
+      <h2>People in. People through.</h2>
+      <div class="rule"></div>
+      <p><strong>13% job:</strong> HR admin, office manager, or whoever onboards staff on WhatsApp.</p>
+      <ul>
+        <li><strong>Recruitment</strong> — applications, screening, interviews, status.</li>
+        <li><strong>Onboarding</strong> — documents, access, how the company works.</li>
+        <li><strong>Employee workflows</strong> — leave, role changes, repeat HR tasks.</li>
+        <li><strong>Documents</strong> — contracts, IDs, policies on the person.</li>
+        <li><strong>Internal processes</strong> — this company’s rules, not generic HR.</li>
+      </ul>
+      <p><strong>Ask:</strong> “Who runs hiring and staff paperwork, and what is that annual salary?”</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">Modules 05–06</span>
+      </div>
+      <p class="module-num">Office Operations</p>
+      <h2>The running of the office.</h2>
+      <div class="rule"></div>
+      <p><strong>13% job:</strong> office admin, operations coordinator, or PA.</p>
+      <ul>
+        <li><strong>Tasks</strong> — assigned, tracked, closed.</li>
+        <li><strong>Scheduling</strong> — internal who / where / due. Customer bookings sit in CX.</li>
+        <li><strong>Documents</strong> — SOPs the office needs every day.</li>
+        <li><strong>Internal workflows</strong> — when X happens, do Y.</li>
+        <li><strong>Admin</strong> — repetitive work that still eats a salary.</li>
+      </ul>
+      <p class="small">Booking labels Operations, Internal Comms, Document / Data Processing usually land here. Do not double-charge the same workflow.</p>
+      <p><strong>Ask:</strong> “If you hired an office admin for a year, what would you pay them?”</p>
+      <p class="module-num">Reporting &amp; Analytics</p>
+      <h2>See the business. Don’t guess.</h2>
+      <div class="rule"></div>
+      <p><strong>13% job:</strong> analyst, ops spreadsheet owner, or Sunday CSV exports.</p>
+      <ul>
+        <li><strong>Dashboards, KPIs, reports, performance, intelligence</strong> — it reads the other modules. Do not sell a dashboard of nothing.</li>
+      </ul>
+      <p><strong>Ask:</strong> “Who builds the reports today? What would that seat cost per year?”</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">Module 07</span>
+      </div>
+      <p class="module-num">Custom</p>
+      <h2>The thing no off-the-shelf tool has got right.</h2>
+      <div class="rule"></div>
+      <p><strong>13% job:</strong> the specialist seat or contractor they keep hiring.</p>
+      <ul>
+        <li><strong>Custom workflows</strong> — nightlife, HVAC dispatch, drop + WhatsApp sales.</li>
+        <li><strong>AI agents</strong> — front desk, qualifier, follow-up — scoped, not a buzzword.</li>
+        <li><strong>Integrations</strong> — official APIs only.</li>
+        <li><strong>Specialized systems</strong> — a module named for them.</li>
+      </ul>
+      <p>Custom almost always means a bigger retainer.</p>
+      <p><strong>Ask:</strong> “Show me the workflow no tool has got right. Who runs it today?”</p>
+      <h3>How they connect</h3>
+      <div class="formula">CX catches the person → Sales moves the pipeline → Finance takes the money → Ops and HR run the company → Reporting shows if it works → Custom is their industry engine</div>
+      <p>Start with one module. The upsell is the next module in the same operating system — not a new vendor.</p>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">05 · How you sell</span>
+      </div>
+      <p class="kicker">Motion</p>
+      <h2>Discovery, then the expensive human, then the system.</h2>
+      <div class="rule"></div>
+      <ol>
+        <li>How do leads enter?</li>
+        <li>Who answers, and on which channels?</li>
+        <li>How are customers managed today?</li>
+        <li>Where is time wasted / what is repetitive?</li>
+        <li>Which modules match that waste?</li>
+        <li>For each module: annual salary of that role → 13%.</li>
+        <li>Size the project: modules × team × channels × custom → retainer.</li>
+        <li>Book the 30-minute consultation. Proposal after scope.</li>
+      </ol>
+      <h3>The motion</h3>
+      <div class="editorial"><div class="n">01</div><div>Open — “Walk me through how a lead becomes a paying customer today.”</div></div>
+      <div class="editorial"><div class="n">02</div><div>Find the expensive human — every BOS sale lands on a role.</div></div>
+      <div class="editorial"><div class="n">03</div><div>Show the operating system — one system, connected modules.</div></div>
+      <div class="editorial"><div class="n">04</div><div>Book /book — lane, modules, timeline, team size, budget signal.</div></div>
+      <div class="editorial"><div class="n">05</div><div>Quote after scope — 13% per module + retainer from size. Web/app separate.</div></div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">05 · Language</span>
+      </div>
+      <p class="kicker">Words</p>
+      <h2>Sound like Onyx. Never like a package menu.</h2>
+      <div class="rule"></div>
+      <table>
+        <tr><th>Use</th><th>Avoid</th></tr>
+        <tr><td>We build the systems behind modern businesses.</td><td>Our packages start at…</td></tr>
+        <tr><td>We don’t start with technology. We start with the business.</td><td>The AI will give you a price.</td></tr>
+        <tr><td>Businesses don’t need more tools. They need better systems.</td><td>Fake discounts, dates, or unscope features</td></tr>
+        <tr><td>Custom solutions. Custom pricing.</td><td>Calling Onyx “just a web design company”</td></tr>
+        <tr><td>13% of that seat for the year, plus a retainer sized to the project.</td><td>Publishing 13% or retainers on the website or ads</td></tr>
+      </table>
+      <h3>Never</h3>
+      <ul>
+        <li>Quote 13% and forget the retainer — or a retainer with no module fee</li>
+        <li>Use the same monthly for a one-module shop and a full operating system</li>
+        <li>Invent prices, discounts, timelines, or features</li>
+        <li>Let the front desk / AI invent numbers</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="grid"></div>
+    <div class="inner">
+      <div class="mast">
+        <div class="brand"><span class="brand-name">onyxwebsystems</span><svg class="cards"><use href="#cards"/></svg></div>
+        <span class="mast-meta">05 · Close</span>
+      </div>
+      <p class="kicker">Before you quote</p>
+      <h2>Checklist. Proof. What not to invent.</h2>
+      <div class="rule"></div>
+      <ul>
+        <li>Module(s) named</li>
+        <li>Role named per module</li>
+        <li>Annual salary (or agreed estimate) per role</li>
+        <li>13% calculated per module</li>
+        <li>Project size scored (team, channels, modules, custom)</li>
+        <li>Retainer band confirmed with leadership until official bands exist</li>
+        <li>Website / app quoted separately if needed</li>
+        <li>Consultation booked</li>
+      </ul>
+      <h3>Know these cold</h3>
+      <p>onyxwebsystems.co.za · /services · /about · /book · Thrift Rotate · SEC Nightlife · Dashboard Conversations · @onyxwebsystems</p>
+      <h3>Do not invent these three</h3>
+      <ol>
+        <li>Whether 13% is once-off, year-one, or charged again each year</li>
+        <li>The actual retainer bands in rand</li>
+        <li>Whether “salary” means basic pay or cost to company</li>
+      </ol>
+      <div class="foot">
+        <span>onyxwebsystems · Create. Connect. Convert.</span>
+        <span>onyxwebsystems.co.za</span>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
